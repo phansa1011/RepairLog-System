@@ -1,0 +1,138 @@
+import { useState, useEffect } from "react";
+import { Plus, ChevronRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { createPageUrl } from "../utils/index";
+import PageHeader from "../components/shared/PageHeader";
+import DataTable from "../components/shared/DataTable";
+import Modal from "../components/shared/Modal";
+import FormField, { Input, Select } from "../components/shared/FormField";
+import ActionButtons from "../components/shared/ActionButtons";
+import StatusBadge from "../components/shared/StatusBadge";
+import {
+    getAllLocation,
+    createLocation,
+    updateLocation,
+    deleteLocation
+} from "../api/locationApi";
+
+const empty = { location_name: "", is_active: 1 };
+
+export default function Locations() {
+    const [locations, setLocations] = useState([]);
+    const [modal, setModal] = useState(false);
+    const [form, setForm] = useState(empty);
+    const [editId, setEditId] = useState(null);
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        loadLocations();
+    }, []);
+
+    const loadLocations = async () => {
+        try {
+            const data = await getAllLocation();
+            setLocations(data);
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const openAdd = () => { setForm(empty); setEditId(null); setModal(true); };
+    const openEdit = (row) => {
+        setForm({ ...row });
+        setEditId(row.location_id);
+        setModal(true);
+    };
+
+    const handleSave = async () => {
+        try {
+            if (editId) {
+                await updateLocation(editId, form);
+            } else {
+                await createLocation(form);
+            }
+
+            await loadLocations();
+            setModal(false);
+            setForm(empty);
+            setEditId(null);
+
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const handleDelete = async (row, e) => {
+        e.stopPropagation();
+
+        if (confirm(`Delete location "${row.location_name}"?`)) {
+            try {
+                await deleteLocation(row.location_id);
+                await loadLocations();
+            } catch (err) {
+                console.error(err);
+            }
+        }
+    };
+
+    const f = (k) => (e) => {
+        const value = k === "is_active" ? Number(e.target.value) : e.target.value;
+        setForm(p => ({ ...p, [k]: value }));
+    };
+
+    const columns = [
+        { key: "location_name", label: "Location Name", render: (v) => <span className="font-medium text-gray-800">{v}</span> },
+        { key: "is_active", label: "Status", render: v => <StatusBadge value={v === 1 ? "active" : "inactive"} /> },
+        {
+            key: "active",
+            label: "",
+            width: "120px",
+            render: (_, row) =>
+                row.is_active === 1 ? (
+                    <ActionButtons
+                        onEdit={() => openEdit(row)}
+                        onDelete={(e) => handleDelete(row, e)}
+                    />
+                ) : null
+        }
+    ];
+
+    return (
+        <div>
+            <PageHeader
+                title="สถานที่"
+                action={
+                    <button
+                        onClick={openAdd}
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-gray-800 shadow-sm hover:shadow-md transition-all"
+                        style={{ background: "#F5E87C" }}
+                    >
+                        <Plus className="w-4 h-4" /> เพิ่มสถานที่
+                    </button>
+                }
+            />
+            <DataTable
+                columns={columns}
+                data={locations}
+                onRowClick={(row) => navigate(`/LocationDetail?id=${row.location_id}`)}
+                emptyMessage="ไม่มีข้อมูลสถานที่"
+            />
+
+            <Modal open={modal} onClose={() => setModal(false)} title={editId ? "Edit Location" : "Add Location"}>
+                <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                        <FormField label="Location Name" required>
+                            <Input value={form.location_name} onChange={f("location_name")} placeholder="Main Office" />
+                        </FormField>
+                    </div>
+                    <div className="flex justify-end gap-3 pt-2">
+                        <button onClick={() => setModal(false)} className="px-4 py-2 rounded-xl text-sm text-gray-500 hover:bg-gray-100 transition-colors">Cancel</button>
+                        <button onClick={handleSave} className="px-5 py-2 rounded-xl text-sm font-semibold text-gray-800 transition-all hover:shadow-md" style={{ background: "#F5E87C" }}>
+                            {editId ? "Save Changes" : "Add Location"}
+                        </button>
+                    </div>
+                </div>
+            </Modal>
+        </div>
+    );
+}
