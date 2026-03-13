@@ -10,7 +10,7 @@ const navItems = [
   { label: "พนักงาน", page: "Worker", icon: Users },
   { label: "สถานที่", page: "Locations", icon: MapPin },
   { label: "อุปกรณ์", page: "Devices", icon: Monitor },
-  { label: "ชิ้นส่วน", page: "Parts", icon: Package },
+  { label: "อะไหล่", page: "Parts", icon: Package },
   { label: "การซ่อม", page: "Repairs", icon: Wrench },
 ];
 
