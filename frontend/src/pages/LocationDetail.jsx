@@ -13,7 +13,7 @@ const CustomTooltip = ({ active, payload, label }) => {
         return (
             <div className="bg-white rounded-xl shadow-lg border border-gray-100 px-4 py-3">
                 <p className="text-xs text-gray-400 mb-1">{label}</p>
-                <p className="text-sm font-semibold text-gray-900">{payload[0].value} repairs</p>
+                <p className="text-sm text-gray-900">{payload[0].value} ครั้ง</p>
             </div>
         );
     }
@@ -54,7 +54,7 @@ export default function LocationDetail() {
     }, [id]);
 
     const partTypeCounts = repairs.reduce((acc, r) => {
-        const type = r.part_type || "Unknown";
+        const type = r.part_type || "ไม่ระบุ";
         acc[type] = (acc[type] || 0) + 1;
         return acc;
     }, {});
@@ -76,7 +76,7 @@ export default function LocationDetail() {
             {/* Back */}
             <Link to={createPageUrl("Locations")} className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-700 transition-colors mb-6">
                 <ArrowLeft className="w-3.5 h-3.5" />
-                Back to Locations
+                กลับไปหน้าสถานที่
             </Link>
 
             {/* Header */}
@@ -84,14 +84,14 @@ export default function LocationDetail() {
                 <div className="flex items-start justify-between flex-wrap gap-4">
                     <div>
                         <div className="flex items-center gap-2 mb-1">
-                            <h1 className="text-2xl font-semibold text-gray-900">{location?.name || "Location"}</h1>
+                            <h1 className="text-2xl font-semibold text-gray-900">{location?.name || "สถานที่"}</h1>
                             {location && (
                                 <StatusBadge value={location.status} />
                             )}
                         </div>
                     </div>
                     <div className="text-right">
-                        <p className="text-xs text-gray-400 uppercase tracking-wide">Total Repairs</p>
+                        <p className="text-xs text-gray-400 uppercase tracking-wide">จำนวนการซ่อม</p>
                         <p className="text-3xl font-semibold text-gray-900">{repairs.length}</p>
                     </div>
                 </div>
@@ -101,27 +101,29 @@ export default function LocationDetail() {
                 {/* Repairs Table */}
                 <div className="xl:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                     <div className="px-6 py-5 border-b border-gray-100">
-                        <h2 className="text-sm font-semibold text-gray-800">Repair Records</h2>
+                        <h2 className="text-sm font-semibold text-gray-800">ประวัติการซ่อม</h2>
                     </div>
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm">
                             <thead>
                                 <tr className="bg-gray-50/60 border-b border-gray-100">
-                                    {["Repair Date", "Device", "Part", "Part Type", "Worker"].map(h => (
+                                    {["วันที่ซ่อม", "อุปกรณ์", "อะไหล่", "ประเภทอะไหล่", "พนักงาน"].map(h => (
                                         <th key={h} className="px-5 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">{h}</th>
                                     ))}
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
                                 {repairs.length === 0 ? (
-                                    <tr><td colSpan={5} className="px-5 py-10 text-center text-gray-300 text-sm">No repairs at this location</td></tr>
+                                    <tr><td colSpan={5} className="px-5 py-10 text-center text-gray-300 text-sm">ยังไม่มีข้อมูลการซ่อม</td></tr>
                                 ) : repairs.map(r => (
                                     <tr key={r.repair_id} className="hover:bg-[#FFFBE8] transition-colors">
                                         <td className="px-5 py-4 text-gray-400">{r.repair_date || "—"}</td>
                                         <td className="px-5 py-4 font-medium text-gray-800">{r.device_name || "—"}</td>
                                         <td className="px-5 py-4 text-gray-500">{r.part_name || "—"}</td>
                                         <td className="px-5 py-4 text-gray-500">{r.part_type || "—"}</td>
-                                        <td className="px-5 py-4 text-gray-500">{r.worker_name || "—"}</td>
+                                        <td className="px-5 py-4 text-gray-500">
+                                            {r.workers?.map(w => w.name).join(", ") || "—"}
+                                        </td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -131,9 +133,9 @@ export default function LocationDetail() {
 
                 {/* Chart */}
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-                    <h2 className="text-sm font-semibold text-gray-800 mb-6">Part Type by Repair Frequency</h2>
+                    <h2 className="text-sm font-semibold text-gray-800 mb-6">ประเภทอะไหล่ที่ใช้ในการซ่อม</h2>
                     {chartData.length === 0 ? (
-                        <div className="flex items-center justify-center h-48 text-gray-300 text-sm">No data yet</div>
+                        <div className="flex items-center justify-center h-48 text-gray-300 text-sm">ยังไม่มีข้อมูล</div>
                     ) : (
                         <ResponsiveContainer width="100%" height={250}>
                             <BarChart data={chartData} layout="vertical" barCategoryGap={8}>

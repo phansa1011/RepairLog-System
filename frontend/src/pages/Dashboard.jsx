@@ -28,7 +28,7 @@ const CustomTooltip = ({ active, payload, label }) => {
         return (
             <div className="bg-white rounded-xl shadow-lg border border-gray-100 px-4 py-3">
                 <p className="text-xs text-gray-400 mb-1">{label}</p>
-                <p className="text-sm font-semibold text-gray-900">{payload[0].value} repairs</p>
+                <p className="text-sm text-gray-900">{payload[0].value} ครั้ง</p>
             </div>
         );
     }
@@ -52,67 +52,36 @@ export default function Dashboard() {
     const [repairs, setRepairs] = useState([]);
 
     useEffect(() => {
-        const fetchWorkers = async () => {
-            try {
-                const data = await getAllWorkers();
-                const activeWorkers = data.filter(w => w.is_active === 1);
-                setWorkers(activeWorkers);
-            } catch (err) {
-                console.error("Error fetching workers:", err);
-            }
-        };
-
-        fetchWorkers();
-    }, []);
-
-    useEffect(() => {
-        const fetchLocations = async () => {
-            try {
-                const data = await getAllLocation();
-                const activeLocations = data.filter(l => l.is_active === 1);
-                setLocations(activeLocations);
-            } catch (err) {
-                console.error("Error fetching locations:", err);
-            }
-        };
-
-        fetchLocations();
-    }, []);
-
-    useEffect(() => {
-        const fetchDevices = async () => {
-            try {
-                const data = await getAllDevice();
-                const activeDevices = data.filter(d => d.is_active === 1);
-                setDevices(activeDevices);
-            } catch (err) {
-                console.error("Error fetching devices:", err);
-            }
-        };
-
-        fetchDevices();
-    }, []);
-
-    useEffect(() => {
-        const fetchRepairs = async () => {
-            try {
-                const data = await getAllRepairs();
-                console.log(data);
-                setRepairs(data);
-            } catch (err) {
-                console.error("Error fetching repairs:", err);
-            }
-        };
-
-        fetchRepairs();
-    }, []);
+    const fetchDashboardData = async () => {
+        try {
+            const [
+                workersData,
+                locationsData,
+                devicesData,
+                repairsData
+            ] = await Promise.all([
+                getAllWorkers(),
+                getAllLocation(),
+                getAllDevice(),
+                getAllRepairs()
+            ]);
+            setWorkers(workersData.filter(w => w.is_active === 1));
+            setLocations(locationsData.filter(l => l.is_active === 1));
+            setDevices(devicesData.filter(d => d.is_active === 1));
+            setRepairs(repairsData);
+        } catch (err) {
+            console.error("Dashboard fetch error:", err);
+        }
+    };
+    fetchDashboardData();
+}, []);
 
     const recentRepairs = [...repairs]
         .sort((a, b) => new Date(b.repair_date) - new Date(a.repair_date))
         .slice(0, 8);
 
     const deviceRepairCounts = repairs.reduce((acc, r) => {
-        const name = r.device_name || "Unknown";
+        const name = r.device_name || "ไม่ระบุ";
         acc[name] = (acc[name] || 0) + 1;
         return acc;
     }, {});
@@ -122,7 +91,7 @@ export default function Dashboard() {
         .map(([name, count]) => ({ name, count }));
 
     const partTypeCounts = repairs.reduce((acc, r) => {
-        const type = r.part_type || "Unknown";
+        const type = r.part_type || "ไม่ระบุ";
         acc[type] = (acc[type] || 0) + 1;
         return acc;
     }, {});
@@ -152,13 +121,13 @@ export default function Dashboard() {
                             <Clock className="w-4 h-4 text-gray-400" />
                             <h2 className="text-sm font-semibold text-gray-800">การซ่อมล่าสุด</h2>
                         </div>
-                        <Link to={createPageUrl("Repairs")} className="text-xs text-gray-400 hover:text-gray-700 transition-colors">View all →</Link>
+                        <Link to={createPageUrl("Repairs")} className="text-xs text-gray-400 hover:text-gray-700 transition-colors">ดูทั้งหมด →</Link>
                     </div>
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm table-fixed">
                             <thead>
                                 <tr className="border-b border-gray-50 bg-gray-50/50">
-                                    {["วันที่ซ่อม", "อุปกรณ์", "ชิ้นส่วน", "ประเภทชิ้นส่วน", "พนักงาน"].map(h => (
+                                    {["วันที่ซ่อม", "อุปกรณ์", "อะไหล่", "ประเภทอะไหล่", "พนักงาน"].map(h => (
                                         <th key={h} className="px-5 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">{h}</th>
                                     ))}
                                 </tr>
@@ -217,7 +186,7 @@ export default function Dashboard() {
                         <div className="flex items-center gap-2 mb-6">
                             <TrendingUp className="w-4 h-4 text-gray-400" />
                             <h2 className="text-sm font-semibold text-gray-800">
-                                ประเภทชิ้นส่วนที่รับการซ่อมมากที่สุด
+                                ประเภทอะไหล่ที่รับการซ่อมมากที่สุด
                             </h2>
                         </div>
 

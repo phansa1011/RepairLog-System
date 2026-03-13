@@ -56,7 +56,7 @@ export default function Workers() {
     };
 
     const handleDelete = async (row) => {
-        if (confirm(`Delete worker "${row.name || row.lastname}"?`)) {
+        if (confirm(`ต้องการลบ "${row.name || row.lastname}" ใช่หรือไม่?`)) {
             try {
                 await deleteWorker(row.worker_id);
                 await fetchWorkers();
@@ -96,7 +96,7 @@ export default function Workers() {
                 action={
                     <button
                         onClick={openAdd}
-                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-gray-800 shadow-sm hover:shadow-md transition-all"
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm text-gray-800 shadow-sm hover:shadow-md transition-all"
                         style={{ background: "#F5E87C" }}
                     >
                         <Plus className="w-4 h-4" /> เพิ่มพนักงาน
@@ -109,19 +109,19 @@ export default function Workers() {
                 <div className="space-y-4">
                     <div className="grid grid-cols-1 gap-4">
                         <FormField label="รหัสพนักงาน">
-                            <Input value={form.staff_id || ""} onChange={f("staff_id")} placeholder="A123" />
+                            <Input value={form.staff_id || ""} onChange={f("staff_id")} placeholder="A1234" />
                         </FormField>
                         <FormField label="ชื่อ">
-                            <Input value={form.name || ""} onChange={f("name")} placeholder="John" />
+                            <Input value={form.name || ""} onChange={f("name")} placeholder="สมชาย" />
                         </FormField>
                         <FormField label="นามสกุล">
-                            <Input value={form.lastname || ""} onChange={f("lastname")} placeholder="Doe" />
+                            <Input value={form.lastname || ""} onChange={f("lastname")} placeholder="กล้าหาญ" />
                         </FormField>
                     </div>
                     <div className="flex justify-end gap-3 pt-2">
-                        <button onClick={() => setModal(false)} className="px-4 py-2 rounded-xl text-sm text-gray-500 hover:bg-gray-100 transition-colors">Cancel</button>
-                        <button onClick={handleSave} className="px-5 py-2 rounded-xl text-sm font-semibold text-gray-800 transition-all hover:shadow-md" style={{ background: "#F5E87C" }}>
-                            {editId ? "Save Changes" : "Add Worker"}
+                        <button onClick={() => setModal(false)} className="px-4 py-2 rounded-xl text-sm text-gray-500 hover:bg-gray-100 transition-colors">ยกเลิก</button>
+                        <button onClick={handleSave} className="px-5 py-2 rounded-xl text-sm text-gray-800 transition-all hover:shadow-md" style={{ background: "#F5E87C" }}>
+                            {editId ? "บันทึกการแก้ไข" : "เพิ่มพนักงาน"}
                         </button>
                     </div>
                 </div>

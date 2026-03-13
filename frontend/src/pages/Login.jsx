@@ -19,7 +19,8 @@ export default function Login() {
         password
       });
 
-      localStorage.setItem("token", data.token);
+      sessionStorage.setItem("token", data.token);
+      sessionStorage.setItem("loginTime", Date.now());
 
       navigate("/");
     } catch (error) {

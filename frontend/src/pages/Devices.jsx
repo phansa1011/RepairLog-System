@@ -75,7 +75,7 @@ export default function Devices() {
   };
 
   const handleDelete = async (row) => {
-    if (confirm(`Delete device "${row.device_name}"?`)) {
+    if (confirm(`ต้องการลบ "${row.device_name}" ใช่หรือไม่?`)) {
       try {
         await deleteDevice(row.device_id);
         load();
@@ -131,7 +131,7 @@ export default function Devices() {
   };
 
   const handleDeletePart = async (devicePartId, partName) => {
-    if (!confirm(`Delete part "${partName}" from this device?`)) return;
+    if (!confirm(`ต้องการลบ "${partName}" ออกจากอุปกรณ์นี้หรือไม่?`)) return;
     try {
       await deletedevices(devicePartId);
       load();
@@ -154,20 +154,19 @@ export default function Devices() {
     },
     {
       key: "device_name",
-      label: "Name",
+      label: "ชื่ออุปกรณ์",
       render: v => <span className="font-medium text-gray-800">{v}</span>
     },
-    { key: "device_brand", label: "Brand" },
-
+    { key: "device_brand", label: "แบรนด์" },
     {
       key: "device_category",
-      label: "Category",
+      label: "ประเภท",
       render: v => <StatusBadge value={v} />
     },
 
     {
       key: "is_active",
-      label: "Status",
+      label: "สถานะ",
       render: v => <StatusBadge value={v ? "active" : "inactive"} />
     },
 
@@ -213,15 +212,14 @@ export default function Devices() {
   return (
     <div>
       <PageHeader
-        title="Devices"
-        subtitle="Manage device types for repair tracking"
+        title="อุปกรณ์"
         action={
           <button
             onClick={openAdd}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-gray-800 shadow-sm hover:shadow-md transition-all"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm text-gray-800 shadow-sm hover:shadow-md transition-all"
             style={{ background: "#F5E87C" }}
           >
-            <Plus className="w-4 h-4" /> Add Device
+            <Plus className="w-4 h-4" /> เพิ่มอุปกรณ์
           </button>
         }
       />
@@ -239,27 +237,27 @@ export default function Devices() {
             <div className="bg-white border border-gray-100 rounded-xl shadow-sm p-5 m-3">
               <div className="flex items-center justify-between mb-3">
                 <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
-                  Parts Used in Repairs
+                  อะไหล่ที่ใช้ในอุปกรณ์
                 </p>
 
                 <button
                   onClick={openAddPart}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-800 shadow-sm hover:shadow-md transition-all"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-gray-800 shadow-sm hover:shadow-md transition-all"
                   style={{ background: "#F5E87C" }}
                 >
-                  <Plus className="w-3.5 h-3.5" /> Add Part
+                  <Plus className="w-3.5 h-3.5" /> เพิ่มอะไหล่
                 </button>
               </div>
               {parts.length === 0 ? (
                 <p className="text-sm text-gray-400 italic">
-                  No parts recorded for this device's repairs.
+                  ยังไม่มีการบันทึกอะไหล่สำหรับอุปกรณ์นี้
                 </p>
               ) : (
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="text-xs text-gray-400 uppercase">
-                      <th className="text-left px-3 py-2">Part</th>
-                      <th className="text-left px-3 py-2">Type</th>
+                      <th className="text-left px-3 py-2">อะไหล่</th>
+                      <th className="text-left px-3 py-2">ประเภท</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -304,16 +302,16 @@ export default function Devices() {
         }}
       />
 
-      <Modal open={addPartModal} onClose={() => setAddPartModal(false)} title="Add Part">
+      <Modal open={addPartModal} onClose={() => setAddPartModal(false)} title="เพิ่มอะไหล่">
         <div className="space-y-4">
-          <FormField label="Part" required>
+          <FormField label="อะไหล่" required>
             <Select
               value={addPartForm.part_id || ""}
               onChange={(e) =>
                 setAddPartForm(p => ({ ...p, part_id: e.target.value }))
               }
             >
-              <option value="">Select Part</option>
+              <option value="">เลือกอะไหล่</option>
               {getAvailableParts().map(p => (
                 <option key={p.part_id} value={p.part_id}>
                   {p.part_name}
@@ -322,9 +320,9 @@ export default function Devices() {
             </Select>
           </FormField>
           <div className="flex justify-end gap-3 pt-2">
-            <button onClick={() => setAddPartModal(false)} className="px-4 py-2 rounded-xl text-sm text-gray-500 hover:bg-gray-100 transition-colors">Cancel</button>
-            <button onClick={handleSaveAddPart} className="px-5 py-2 rounded-xl text-sm font-semibold text-gray-800 transition-all hover:shadow-md" style={{ background: "#F5E87C" }}>
-              Save
+            <button onClick={() => setAddPartModal(false)} className="px-4 py-2 rounded-xl text-sm text-gray-500 hover:bg-gray-100 transition-colors">ยกเลิก</button>
+            <button onClick={handleSaveAddPart} className="px-5 py-2 rounded-xl text-sm text-gray-800 transition-all hover:shadow-md" style={{ background: "#F5E87C" }}>
+              บันทึก
             </button>
           </div>
         </div>
@@ -333,13 +331,13 @@ export default function Devices() {
       <Modal open={modal} onClose={() => setModal(false)} title={editId ? "Edit Device" : "Add Device"}>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
-            <FormField label="Device Name" required>
-              <Input value={form.device_name} onChange={f("device_name")} placeholder="MacBook Pro" />
+            <FormField label="ชื่ออุปกรณ์" required>
+              <Input value={form.device_name} onChange={f("device_name")} placeholder="เช่น เราเตอร์" />
             </FormField>
-            <FormField label="Brand">
-              <Input value={form.device_brand} onChange={f("device_brand")} placeholder="Apple" />
+            <FormField label="แบรนด์">
+              <Input value={form.device_brand} onChange={f("device_brand")} placeholder="เช่น Ruijie Reyee" />
             </FormField>
-            <FormField label="device_Category">
+            <FormField label="ประเภทอุปกรณ์">
               <Select value={form.device_category} onChange={f("device_category")}>
                 {["other"].map(c => (
                   <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>
@@ -348,9 +346,9 @@ export default function Devices() {
             </FormField>
           </div>
           <div className="flex justify-end gap-3 pt-2">
-            <button onClick={() => setModal(false)} className="px-4 py-2 rounded-xl text-sm text-gray-500 hover:bg-gray-100 transition-colors">Cancel</button>
-            <button onClick={handleSave} className="px-5 py-2 rounded-xl text-sm font-semibold text-gray-800 transition-all hover:shadow-md" style={{ background: "#F5E87C" }}>
-              {editId ? "Save Changes" : "Add Device"}
+            <button onClick={() => setModal(false)} className="px-4 py-2 rounded-xl text-sm text-gray-500 hover:bg-gray-100 transition-colors">ยกเลิก</button>
+            <button onClick={handleSave} className="px-5 py-2 rounded-xl text-sm text-gray-800 transition-all hover:shadow-md" style={{ background: "#F5E87C" }}>
+              {editId ? "บันทึกการแก้ไข" : "เพิ่มอุปกรณ์"}
             </button>
           </div>
         </div>

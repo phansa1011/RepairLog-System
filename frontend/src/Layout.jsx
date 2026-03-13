@@ -20,6 +20,43 @@ const navItems = [
 export default function Layout({ children, currentPageName }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = sessionStorage.getItem("token");
+
+    if (!token) {
+      navigate(createPageUrl("Login"), { replace: true });
+    }
+  }, []);
+
+  useEffect(() => {
+    const loginTime = sessionStorage.getItem("loginTime");
+
+    if (loginTime) {
+      const now = Date.now();
+      const diff = now - loginTime;
+
+      const threeHours = 3 * 60 * 60 * 1000;
+
+      // ถ้าเกิน 3 ชั่วโมงแล้ว
+      if (diff > threeHours) {
+        sessionStorage.clear();
+        navigate(createPageUrl("Login"), { replace: true });
+      } else {
+
+        // ตั้ง timer logout อัตโนมัติ
+        const remainingTime = threeHours - diff;
+
+        const timer = setTimeout(() => {
+          sessionStorage.clear();
+          navigate(createPageUrl("Login"), { replace: true });
+        }, remainingTime);
+
+        return () => clearTimeout(timer);
+      }
+    }
+  }, []);
+
   const isLoginPage = currentPageName === "Login";
 
   if (isLoginPage) {
@@ -81,7 +118,8 @@ export default function Layout({ children, currentPageName }) {
             )}*/}
             <button
               onClick={() => {
-                localStorage.removeItem("token");
+                sessionStorage.removeItem("token");
+                sessionStorage.removeItem("loginTime");
                 navigate(createPageUrl("Login"), { replace: true });
               }}
               className="hidden md:flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"

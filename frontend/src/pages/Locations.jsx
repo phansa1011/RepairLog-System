@@ -65,7 +65,7 @@ export default function Locations() {
     const handleDelete = async (row, e) => {
         e.stopPropagation();
 
-        if (confirm(`Delete location "${row.location_name}"?`)) {
+        if (confirm(`ต้องการลบ "${row.location_name}" ใช่หรือไม่?`)) {
             try {
                 await deleteLocation(row.location_id);
                 await loadLocations();
@@ -81,8 +81,8 @@ export default function Locations() {
     };
 
     const columns = [
-        { key: "location_name", label: "Location Name", render: (v) => <span className="font-medium text-gray-800">{v}</span> },
-        { key: "is_active", label: "Status", render: v => <StatusBadge value={v === 1 ? "active" : "inactive"} /> },
+        { key: "location_name", label: "ชื่อสถานที่", render: (v) => <span className="font-medium text-gray-800">{v}</span> },
+        { key: "is_active", label: "สถานะ", render: v => <StatusBadge value={v === 1 ? "active" : "inactive"} /> },
         {
             key: "active",
             label: "",
@@ -104,7 +104,7 @@ export default function Locations() {
                 action={
                     <button
                         onClick={openAdd}
-                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-gray-800 shadow-sm hover:shadow-md transition-all"
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm text-gray-800 shadow-sm hover:shadow-md transition-all"
                         style={{ background: "#F5E87C" }}
                     >
                         <Plus className="w-4 h-4" /> เพิ่มสถานที่
@@ -118,17 +118,17 @@ export default function Locations() {
                 emptyMessage="ไม่มีข้อมูลสถานที่"
             />
 
-            <Modal open={modal} onClose={() => setModal(false)} title={editId ? "Edit Location" : "Add Location"}>
+            <Modal open={modal} onClose={() => setModal(false)} title={editId ? "แก้ไขสถานที่" : "เพิ่มสถานที่"}>
                 <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
-                        <FormField label="Location Name" required>
-                            <Input value={form.location_name} onChange={f("location_name")} placeholder="Main Office" />
+                        <FormField label="ชื่อสถานที่" required>
+                            <Input value={form.location_name} onChange={f("location_name")} placeholder="เช่น โรงเรียน" />
                         </FormField>
                     </div>
                     <div className="flex justify-end gap-3 pt-2">
-                        <button onClick={() => setModal(false)} className="px-4 py-2 rounded-xl text-sm text-gray-500 hover:bg-gray-100 transition-colors">Cancel</button>
+                        <button onClick={() => setModal(false)} className="px-4 py-2 rounded-xl text-sm text-gray-500 hover:bg-gray-100 transition-colors">ยกเลิก</button>
                         <button onClick={handleSave} className="px-5 py-2 rounded-xl text-sm font-semibold text-gray-800 transition-all hover:shadow-md" style={{ background: "#F5E87C" }}>
-                            {editId ? "Save Changes" : "Add Location"}
+                            {editId ? "บันทึกการแก้ไข" : "เพิ่มสถานที่"}
                         </button>
                     </div>
                 </div>

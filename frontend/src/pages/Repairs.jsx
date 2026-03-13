@@ -152,7 +152,7 @@ export default function Repairs() {
 
     const handleRowClick = (repair_id) => setExpandedId(prev => prev === repair_id ? null : repair_id);
 
-    const headers = ["Created", "Location", "Device", "Part", "Repair Date", ""];
+    const headers = ["วันที่สร้าง", "สถานที่", "อุปกรณ์", "อะไหล่", "วันที่ซ่อม", ""];
 
     const columns = [
         {
@@ -164,38 +164,32 @@ export default function Repairs() {
                     ? <ChevronDown className="w-4 h-4 text-gray-400" />
                     : <ChevronRight className="w-4 h-4 text-gray-400" />
         },
-
         {
             key: "create_at",
-            label: "Created"
+            label: "วันที่สร้าง"
         },
-
         {
             key: "location",
-            label: "Location",
+            label: "สถานที่",
             render: (_, row) =>
                 locations.find(l => l.location_id === row.location_id)?.location_name || "—"
         },
-
         {
             key: "device",
-            label: "Device",
+            label: "อุปกรณ์",
             render: (_, row) =>
                 devices.find(d => d.device_id === row.device_id)?.device_name || "—"
         },
-
         {
             key: "part",
-            label: "Part",
+            label: "อะไหล่",
             render: (_, row) =>
                 parts.find(p => p.part_id === row.part_id)?.part_name || "—"
         },
-
         {
             key: "repair_date",
-            label: "Repair Date"
+            label: "วันที่ซ่อม"
         },
-
         {
             key: "action",
             label: "",
@@ -214,15 +208,14 @@ export default function Repairs() {
     return (
         <div>
             <PageHeader
-                title="Repairs"
-                subtitle="Track and manage all repair work orders"
+                title="รายการซ่อม"
                 action={
                     <button
                         onClick={openAdd}
-                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-gray-800 shadow-sm hover:shadow-md transition-all"
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm text-gray-800 shadow-sm hover:shadow-md transition-all"
                         style={{ background: "#F5E87C" }}
                     >
-                        <Plus className="w-4 h-4" /> Add Repair
+                        <Plus className="w-4 h-4" /> เพิ่มรายการซ่อม
                     </button>
                 }
             />
@@ -235,16 +228,14 @@ export default function Repairs() {
                 expandedRowId={expandedId}
                 expandedRowRender={(row) => (
                     <div className="my-3 bg-white border border-gray-100 rounded-xl shadow-sm p-5 grid grid-cols-2 gap-x-10 gap-y-3">
-
                         <div>
                             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
-                                Repair Details
+                                รายละเอียดการซ่อม
                             </p>
 
                             <div className="space-y-2 text-sm">
-
                                 <div className="flex gap-2">
-                                    <span className="text-gray-400 w-36 shrink-0">Worker</span>
+                                    <span className="text-gray-400 w-36 shrink-0">พนักงาน</span>
                                     <span className="text-gray-800 font-medium">
                                         {
                                             row.workers && row.workers.length > 0
@@ -263,48 +254,38 @@ export default function Repairs() {
                                         }
                                     </span>
                                 </div>
-
                                 <div className="flex gap-2">
-                                    <span className="text-gray-400 w-36 shrink-0">Request Channel</span>
+                                    <span className="text-gray-400 w-36 shrink-0">ช่องทางแจ้ง</span>
                                     <span className="text-gray-700">{row.request_channel || "—"}</span>
                                 </div>
-
                             </div>
                         </div>
 
                         <div>
-                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
-                                Cause & Note
-                            </p>
-
                             <div className="space-y-3 text-sm">
-
                                 <div>
-                                    <p className="text-gray-400 mb-1">Cause</p>
+                                    <p className="text-gray-400 mb-1">สาเหตุ</p>
                                     <p className="text-gray-700">{row.cause || "—"}</p>
                                 </div>
-
                                 <div>
-                                    <p className="text-gray-400 mb-1">Notes</p>
+                                    <p className="text-gray-400 mb-1">หมายเหตุ</p>
                                     <p className="text-gray-700">{row.note || "—"}</p>
                                 </div>
-
                             </div>
                         </div>
-
                     </div>
                 )}
             />
 
-            <Modal open={modal} onClose={() => setModal(false)} title={editId ? "Edit Repair" : "Add Repair"} width="max-w-2xl">
+            <Modal open={modal} onClose={() => setModal(false)} title={editId ? "แก้ไขรายการซ่อม" : "เพิ่มรายการซ่อม"} width="max-w-2xl">
                 <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
-                        <FormField label="Location" required>
+                        <FormField label="สถานที่" required>
                             {locations.length > 0 ? (
                                 <SearchSelect
                                     options={locations.filter(l => l.is_active === 1)}
                                     value={form.location_id}
-                                    placeholder="Search location..."
+                                    placeholder="ค้นหาสถานที่..."
                                     getLabel={(l) => l.location_name}
                                     getValue={(l) => l.location_id}
                                     onChange={(val) =>
@@ -317,12 +298,12 @@ export default function Repairs() {
                                 <Input value={form.location_name} onChange={f("location_name")} placeholder="Location name" />
                             )}
                         </FormField>
-                        <FormField label="Device" required>
+                        <FormField label="อุปกรณ์" required>
                             {devices.length > 0 ? (
                                 <SearchSelect
                                     options={devices.filter(l => l.is_active === 1)}
                                     value={form.device_id}
-                                    placeholder="Search device..."
+                                    placeholder="ค้นหาอุปกรณ์..."
                                     getLabel={(d) => d.device_name}
                                     getValue={(d) => d.device_id}
                                     onChange={(val) =>
@@ -335,11 +316,11 @@ export default function Repairs() {
                                 <Input value={form.device_name} onChange={f("device_name")} placeholder="Device name" />
                             )}
                         </FormField>
-                        <FormField label="Part">
+                        <FormField label="อะไหล่">
                             <SearchSelect
                                 options={availableParts}
                                 value={form.part_id}
-                                placeholder="Search part..."
+                                placeholder="ค้นหาอะไหล่..."
                                 getLabel={(p) => p.part_name}
                                 getValue={(p) => p.part_id}
                                 onChange={(val) =>
@@ -353,12 +334,12 @@ export default function Repairs() {
                                 setOpen={(state) => setOpenSelect(state ? "part" : null)}
                             />
                         </FormField>
-                        <FormField label="Request Channel">
+                        <FormField label="ช่องทางแจ้ง">
                             <Select
                                 value={form.request_channel}
                                 onChange={f("request_channel")}
                             >
-                                <option value="">Select channel</option>
+                                <option value="">เลือกช่องทาง</option>
 
                                 {requestChannels.map((ch, i) => (
                                     <option key={i} value={ch}>
@@ -367,14 +348,12 @@ export default function Repairs() {
                                 ))}
                             </Select>
                         </FormField>
-                        <FormField label="Repair Date">
+                        <FormField label="วันที่ซ่อม">
                             <Input type="date" value={form.repair_date} onChange={f("repair_date")} />
                         </FormField>
-                        <FormField label="Worker">
+                        <FormField label="พนักงาน">
                             {form.worker_ids.map((id, i) => {
-
                                 const usedWorkers = form.worker_ids.filter((_, idx) => idx !== i);
-
                                 const availableWorkers = workers.filter(
                                     w => w.is_active === 1 && !usedWorkers.includes(w.worker_id)
                                 );
@@ -384,7 +363,7 @@ export default function Repairs() {
                                         <SearchSelect
                                             options={availableWorkers}
                                             value={id}
-                                            placeholder="Search worker..."
+                                            placeholder="ค้นหาพนักงาน..."
                                             getLabel={(w) => `${w.name} ${w.lastname}`}
                                             getValue={(w) => w.worker_id}
                                             onChange={(val) => changeWorker(i, val)}
@@ -392,7 +371,6 @@ export default function Repairs() {
                                             open={openSelect === `worker-${i}`}
                                             setOpen={(state) => setOpenSelect(state ? `worker-${i}` : null)}
                                         />
-
                                         {i > 0 && (
                                             <span
                                                 onClick={() => removeWorker(i)}
@@ -409,20 +387,20 @@ export default function Repairs() {
                                 onClick={addWorker}
                                 className="text-sm text-blue-500 cursor-pointer hover:underline"
                             >
-                                + Add Worker
+                                + เพิ่มพนักงาน
                             </span>
                         </FormField>
                     </div>
-                    <FormField label="Cause">
-                        <Textarea value={form.cause} onChange={f("cause")} placeholder="Cause..." rows={3} />
+                    <FormField label="สาเหตุ">
+                        <Textarea value={form.cause} onChange={f("cause")} placeholder="ระบุสาเหตุ..." rows={3} />
                     </FormField>
-                    <FormField label="Note">
-                        <Textarea value={form.note} onChange={f("note")} placeholder="Note" rows={3} />
+                    <FormField label="หมายเหตุ">
+                        <Textarea value={form.note} onChange={f("note")} placeholder="หมายเหตุ" rows={3} />
                     </FormField>
                     <div className="flex justify-end gap-3 pt-2">
-                        <button onClick={() => setModal(false)} className="px-4 py-2 rounded-xl text-sm text-gray-500 hover:bg-gray-100 transition-colors">Cancel</button>
-                        <button onClick={handleSave} className="px-5 py-2 rounded-xl text-sm font-semibold text-gray-800 transition-all hover:shadow-md" style={{ background: "#F5E87C" }}>
-                            {editId ? "Save Changes" : "Add Repair"}
+                        <button onClick={() => setModal(false)} className="px-4 py-2 rounded-xl text-sm text-gray-500 hover:bg-gray-100 transition-colors">ยกเลิก</button>
+                        <button onClick={handleSave} className="px-5 py-2 rounded-xl text-sm text-gray-800 transition-all hover:shadow-md" style={{ background: "#F5E87C" }}>
+                            {editId ? "บันทึกการแก้ไข" : "เพิ่มรายการซ่อม"}
                         </button>
                     </div>
                 </div>

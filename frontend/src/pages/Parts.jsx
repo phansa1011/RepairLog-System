@@ -3,7 +3,7 @@ import { Plus } from "lucide-react";
 import PageHeader from "../components/shared/PageHeader";
 import DataTable from "../components/shared/DataTable";
 import Modal from "../components/shared/Modal";
-import FormField, { Input, Select, Textarea } from "../components/shared/FormField";
+import FormField, { Input } from "../components/shared/FormField";
 import ActionButtons from "../components/shared/ActionButtons";
 import StatusBadge from "../components/shared/StatusBadge";
 import {
@@ -59,7 +59,7 @@ export default function Parts() {
     };
 
     const handleDelete = async (row) => {
-        if (confirm(`Delete part "${row.part_name}"?`)) {
+        if (confirm(`ต้องการลบ "${row.part_name}" ใช่หรือไม่?`)) {
             try {
                 await deletePart(row.part_id);
                 load();
@@ -72,9 +72,9 @@ export default function Parts() {
     const f = (k) => (e) => setForm(p => ({ ...p, [k]: e.target.value }));
 
     const columns = [
-        { key: "part_name", label: "Part Name", render: v => <span className="font-medium text-gray-800">{v}</span> },
-        { key: "part_type", label: "Part Type" },
-        { key: "is_active", label: "Status", render: v => <StatusBadge value={v === 1 ? "active" : "inactive"} /> },
+        { key: "part_name", label: "ชื่ออะไหล่", render: v => <span className="font-medium text-gray-800">{v}</span> },
+        { key: "part_type", label: "ประเภทอะไหล่" },
+        { key: "is_active", label: "สถานะ", render: v => <StatusBadge value={v === 1 ? "active" : "inactive"} /> },
         {
             key: "active",
             label: "",
@@ -92,34 +92,33 @@ export default function Parts() {
     return (
         <div>
             <PageHeader
-                title="Parts"
-                subtitle="Manage parts and inventory for repairs"
+                title="อะไหล่"
                 action={
                     <button
                         onClick={openAdd}
-                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-gray-800 shadow-sm hover:shadow-md transition-all"
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm text-gray-800 shadow-sm hover:shadow-md transition-all"
                         style={{ background: "#F5E87C" }}
                     >
-                        <Plus className="w-4 h-4" /> Add Part
+                        <Plus className="w-4 h-4" /> เพิ่มอะไหล่
                     </button>
                 }
             />
-            <DataTable columns={columns} data={parts} emptyMessage="No parts found" />
+            <DataTable columns={columns} data={parts} emptyMessage="ไม่พบข้อมูลอะไหล่" />
 
-            <Modal open={modal} onClose={() => setModal(false)} title={editId ? "Edit Part" : "Add Part"}>
+            <Modal open={modal} onClose={() => setModal(false)} title={editId ? "แก้ไขอะไหล่" : "เพิ่มอะไหล่"}>
                 <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
-                        <FormField label="part_Name" required>
-                            <Input value={form.part_name} onChange={f("part_name")} placeholder="Battery 3600mAh" />
+                        <FormField label="ชื่ออะไหล่" required>
+                            <Input value={form.part_name} onChange={f("part_name")} placeholder="เช่น สายไฟ" />
                         </FormField>
-                        <FormField label="part_type">
-                            <Input value={form.part_type} onChange={f("part_type")} placeholder="Battery, Screen, Cable..." />
+                        <FormField label="ประเภทอะไหร่">
+                            <Input value={form.part_type} onChange={f("part_type")} placeholder="เช่น สายไฟ" />
                         </FormField>
                     </div>
                     <div className="flex justify-end gap-3 pt-2">
-                        <button onClick={() => setModal(false)} className="px-4 py-2 rounded-xl text-sm text-gray-500 hover:bg-gray-100 transition-colors">Cancel</button>
-                        <button onClick={handleSave} className="px-5 py-2 rounded-xl text-sm font-semibold text-gray-800 transition-all hover:shadow-md" style={{ background: "#F5E87C" }}>
-                            {editId ? "Save Changes" : "Add Part"}
+                        <button onClick={() => setModal(false)} className="px-4 py-2 rounded-xl text-sm text-gray-500 hover:bg-gray-100 transition-colors">ยกเลิก</button>
+                        <button onClick={handleSave} className="px-5 py-2 rounded-xl text-sm text-gray-800 transition-all hover:shadow-md" style={{ background: "#F5E87C" }}>
+                            {editId ? "บันทึกการแก้ไข" : "เพิ่มอะไหล่"}
                         </button>
                     </div>
                 </div>
