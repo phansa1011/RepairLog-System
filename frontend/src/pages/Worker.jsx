@@ -25,6 +25,10 @@ export default function Workers() {
     const [search, setSearch] = useState("");
     const [error, setError] = useState("");
 
+    const [confirmModal, setConfirmModal] = useState(false);
+    const [selectedWorker, setSelectedWorker] = useState(null);
+    const [confirmType, setConfirmType] = useState(""); // delete | restore
+
     useEffect(() => {
         fetchWorkers();
     }, []);
@@ -106,25 +110,28 @@ export default function Workers() {
         }
     };
 
-    const handleDelete = async (row) => {
-        if (confirm(`ต้องการลบ "${row.name || row.lastname}" ใช่หรือไม่?`)) {
-            try {
-                await deleteWorker(row.worker_id);
-                await fetchWorkers();
-            } catch (err) {
-                console.error(err);
-            }
-        }
+    const handleDelete = (row) => {
+        setSelectedWorker(row);
+        setConfirmType("delete");
+        setConfirmModal(true);
+    };
+    const handleRestore = (row) => {
+        setSelectedWorker(row);
+        setConfirmType("restore");
+        setConfirmModal(true);
     };
 
-    const handleRestore = async (row) => {
-        if (confirm(`ต้องการกู้คืน "${row.name}" ใช่หรือไม่?`)) {
-            try {
-                await restoreWorker(row.worker_id);
-                await fetchWorkers();
-            } catch (err) {
-                console.error(err);
+    const handleConfirm = async () => {
+        try {
+            if (confirmType === "delete") {
+                await deleteWorker(selectedWorker.worker_id);
+            } else if (confirmType === "restore") {
+                await restoreWorker(selectedWorker.worker_id);
             }
+            await fetchWorkers();
+            setConfirmModal(false);
+        } catch (err) {
+            console.error(err);
         }
     };
 
@@ -198,7 +205,7 @@ export default function Workers() {
                         </div>
                     )}
                     <div className="grid grid-cols-1 gap-4">
-                        <FormField label="รหัสพนักงาน">
+                        <FormField label="รหัสพนักงาน" required>
                             <Input
                                 value={form.staff_id || ""}
                                 onChange={(e) =>
@@ -210,7 +217,7 @@ export default function Workers() {
                                 placeholder="A1234"
                             />
                         </FormField>
-                        <FormField label="ชื่อ">
+                        <FormField label="ชื่อ" required>
                             <Input
                                 value={form.name || ""}
                                 onChange={(e) =>
@@ -220,7 +227,7 @@ export default function Workers() {
                                     }))
                                 } placeholder="สมชาย" />
                         </FormField>
-                        <FormField label="นามสกุล">
+                        <FormField label="นามสกุล" required>
                             <Input
                                 value={form.lastname || ""}
                                 onChange={(e) =>
@@ -235,6 +242,33 @@ export default function Workers() {
                         <button onClick={() => setModal(false)} className="px-4 py-2 rounded-xl text-sm text-gray-500 hover:bg-gray-100 transition-colors">ยกเลิก</button>
                         <button onClick={handleSave} className="px-5 py-2 rounded-xl text-sm text-gray-800 transition-all hover:shadow-md" style={{ background: "#F5E87C" }}>
                             {editId ? "บันทึกการแก้ไข" : "เพิ่มพนักงาน"}
+                        </button>
+                    </div>
+                </div>
+            </Modal>
+            <Modal
+                open={confirmModal}
+                onClose={() => setConfirmModal(false)}
+                title="ยืนยันการทำรายการ"
+            >
+                <div className="space-y-4">
+                    <p className="text-sm text-gray-600">
+                        {confirmType === "delete"
+                            ? `ต้องการลบ "${selectedWorker?.name}" ใช่หรือไม่?`
+                            : `ต้องการกู้คืน "${selectedWorker?.name}" ใช่หรือไม่?`}
+                    </p>
+                    <div className="flex justify-end gap-3">
+                        <button
+                            onClick={() => setConfirmModal(false)}
+                            className="px-4 py-2 rounded-xl text-sm text-gray-500 hover:bg-gray-100"
+                        >
+                            ยกเลิก
+                        </button>
+                        <button
+                            onClick={handleConfirm}
+                            className="px-4 py-2 rounded-xl text-sm text-white bg-red-500 hover:bg-red-600"
+                        >
+                            ยืนยัน
                         </button>
                     </div>
                 </div>

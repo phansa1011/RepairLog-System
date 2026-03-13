@@ -54,7 +54,7 @@ exports.createPart = (req, res) => {
         if (err) {
             if (err.message.includes("UNIQUE constraint failed")) {
                 return res.status(409).json({
-                    message: "Part name already exists"
+                    message: "มีอะไหล่นี้อยู่แล้ว"
                 });
             }
             return res.status(500).json({

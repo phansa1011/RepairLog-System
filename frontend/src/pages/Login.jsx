@@ -30,9 +30,11 @@ export default function Login() {
   };
 
   return (
-    <div className="w-full flex items-center justify-center bg-gray-50 py-20">
-
-      <div className="w-full max-w-sm min-w-0 bg-white p-6 rounded-xl shadow-md">
+    <div className="w-full flex flex-col items-center justify-center bg-white py-20 gap-3">
+      <h1 className="text-3xl font-bold text-gray-800 tracking-wide mb-4">
+        Repair<span className="text-yellow-400">Log</span>
+      </h1>
+      <div className="w-full max-w-sm min-w-0 bg-white p-6 rounded-xl shadow-md border border-gray-300">
 
         <h2 className="text-xl font-semibold text-center mb-6">
           Login

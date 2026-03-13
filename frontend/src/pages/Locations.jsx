@@ -27,6 +27,10 @@ export default function Locations() {
     const [search, setSearch] = useState("");
     const [error, setError] = useState("");
 
+    const [confirmModal, setConfirmModal] = useState(false);
+    const [confirmType, setConfirmType] = useState("");
+    const [selectedLocation, setSelectedLocation] = useState(null);
+
     useEffect(() => {
         loadLocations();
     }, []);
@@ -102,28 +106,32 @@ export default function Locations() {
         }
     };
 
-    const handleDelete = async (row, e) => {
+    const handleDelete = (row, e) => {
         e.stopPropagation();
-
-        if (confirm(`ต้องการลบ "${row.location_name}" ใช่หรือไม่?`)) {
-            try {
-                await deleteLocation(row.location_id);
-                await loadLocations();
-            } catch (err) {
-                console.error(err);
-            }
-        }
+        setSelectedLocation(row);
+        setConfirmType("delete");
+        setConfirmModal(true);
     };
 
-    const handleRestore = async (row, e) => {
+    const handleRestore = (row, e) => {
         e.stopPropagation();
-        if (confirm(`ต้องการกู้คืน "${row.location_name}" ใช่หรือไม่?`)) {
-            try {
-                await restoreLocation(row.location_id);
-                await loadLocations();
-            } catch (err) {
-                console.error(err);
+        setSelectedLocation(row);
+        setConfirmType("restore");
+        setConfirmModal(true);
+    };
+
+    const handleConfirm = async () => {
+        try {
+            if (confirmType === "delete") {
+                await deleteLocation(selectedLocation.location_id);
             }
+            if (confirmType === "restore") {
+                await restoreLocation(selectedLocation.location_id);
+            }
+            await loadLocations();
+            setConfirmModal(false);
+        } catch (err) {
+            console.error(err);
         }
     };
 
@@ -215,6 +223,36 @@ export default function Locations() {
                         <button onClick={() => setModal(false)} className="px-4 py-2 rounded-xl text-sm text-gray-500 hover:bg-gray-100 transition-colors">ยกเลิก</button>
                         <button onClick={handleSave} className="px-5 py-2 rounded-xl text-sm font-semibold text-gray-800 transition-all hover:shadow-md" style={{ background: "#F5E87C" }}>
                             {editId ? "บันทึกการแก้ไข" : "เพิ่มสถานที่"}
+                        </button>
+                    </div>
+                </div>
+            </Modal>
+            <Modal
+                open={confirmModal}
+                onClose={() => setConfirmModal(false)}
+                title="ยืนยันการทำรายการ"
+            >
+                <div className="space-y-4">
+                    <p className="text-sm text-gray-600">
+                        {confirmType === "delete" &&
+                            `ต้องการลบ "${selectedLocation?.location_name}" ใช่หรือไม่?`
+                        }
+                        {confirmType === "restore" &&
+                            `ต้องการกู้คืน "${selectedLocation?.location_name}" ใช่หรือไม่?`
+                        }
+                    </p>
+                    <div className="flex justify-end gap-3">
+                        <button
+                            onClick={() => setConfirmModal(false)}
+                            className="px-4 py-2 rounded-xl text-sm text-gray-500 hover:bg-gray-100"
+                        >
+                            ยกเลิก
+                        </button>
+                        <button
+                            onClick={handleConfirm}
+                            className="px-4 py-2 rounded-xl text-sm text-white bg-red-500 hover:bg-red-600"
+                        >
+                            ยืนยัน
                         </button>
                     </div>
                 </div>

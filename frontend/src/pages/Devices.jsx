@@ -3,18 +3,13 @@ import { Plus, ChevronDown, ChevronRight, Pencil, Trash2, Search, RotateCcw } fr
 import PageHeader from "../components/shared/PageHeader";
 import DataTable from "../components/shared/DataTable";
 import Modal from "../components/shared/Modal";
-import FormField, { Input, Select, Textarea } from "../components/shared/FormField";
+import FormField, { Input, Select } from "../components/shared/FormField";
 import StatusBadge from "../components/shared/StatusBadge";
 import { getAllDevice, createDevice, updateDevice, deleteDevice, restoreDevice } from "../api/deviceApi";
 import { getAllPart } from "../api/partApi";
 import { getAllDevicePart, createdevices, deletedevices, updatedevices } from "../api/devicePartApi";
 
-const empty = {
-  device_name: "",
-  device_brand: "",
-  device_category: "",
-  is_active: 1
-};
+const empty = { device_name: "", device_brand: "", device_category: "", is_active: 1 };
 
 const deviceCategories = [
   "อื่นๆ"
@@ -34,6 +29,11 @@ export default function Devices() {
   const [editPartId, setEditPartId] = useState(null);
   const [search, setSearch] = useState("");
   const [error, setError] = useState("");
+
+  const [confirmModal, setConfirmModal] = useState(false);
+  const [confirmType, setConfirmType] = useState("");
+  const [selectedRow, setSelectedRow] = useState(null);
+  const [selectedPart, setSelectedPart] = useState(null);
 
   const load = async () => {
     try {
@@ -143,26 +143,16 @@ export default function Devices() {
     }
   };
 
-  const handleDelete = async (row) => {
-    if (confirm(`ต้องการลบ "${row.device_name}" ใช่หรือไม่?`)) {
-      try {
-        await deleteDevice(row.device_id);
-        load();
-      } catch (err) {
-        alert(err.message);
-      }
-    }
+  const handleDelete = (row) => {
+    setSelectedRow(row);
+    setConfirmType("deleteDevice");
+    setConfirmModal(true);
   };
 
-  const handleRestore = async (row) => {
-    if (confirm(`ต้องการกู้คืน "${row.device_name}" ใช่หรือไม่?`)) {
-      try {
-        await restoreDevice(row.device_id);
-        load();
-      } catch (err) {
-        alert(err.message);
-      }
-    }
+  const handleRestore = (row) => {
+    setSelectedRow(row);
+    setConfirmType("restoreDevice");
+    setConfirmModal(true);
   };
 
   const handleRowClick = (id) => {
@@ -196,7 +186,7 @@ export default function Devices() {
       setEditPartId(null);
       load();
     } catch (err) {
-      alert(err.message);
+      setError(err.message)
     }
   };
 
@@ -210,13 +200,27 @@ export default function Devices() {
     setAddPartModal(true);
   };
 
-  const handleDeletePart = async (devicePartId, partName) => {
-    if (!confirm(`ต้องการลบ "${partName}" ออกจากอุปกรณ์นี้หรือไม่?`)) return;
+  const handleDeletePart = (devicePartId, partName) => {
+    setSelectedPart({ devicePartId, partName });
+    setConfirmType("deletePart");
+    setConfirmModal(true);
+  };
+
+  const handleConfirm = async () => {
     try {
-      await deletedevices(devicePartId);
+      if (confirmType === "deleteDevice") {
+        await deleteDevice(selectedRow.device_id);
+      }
+      if (confirmType === "restoreDevice") {
+        await restoreDevice(selectedRow.device_id);
+      }
+      if (confirmType === "deletePart") {
+        await deletedevices(selectedPart.devicePartId);
+      }
+      setConfirmModal(false);
       load();
     } catch (err) {
-      alert(err.message);
+      console.error(err);
     }
   };
 
@@ -438,6 +442,36 @@ export default function Devices() {
           </div>
         </div>
       </Modal>
+      <Modal
+        open={confirmModal}
+        onClose={() => setConfirmModal(false)}
+        title="ยืนยันการทำรายการ"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-gray-600">
+            {confirmType === "deleteDevice" &&
+              `ต้องการลบ "${selectedRow?.device_name}" ใช่หรือไม่?`}
+            {confirmType === "restoreDevice" &&
+              `ต้องการกู้คืน "${selectedRow?.device_name}" ใช่หรือไม่?`}
+            {confirmType === "deletePart" &&
+              `ต้องการลบ "${selectedPart?.partName}" ออกจากอุปกรณ์นี้หรือไม่?`}
+          </p>
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => setConfirmModal(false)}
+              className="px-4 py-2 rounded-xl text-sm text-gray-500 hover:bg-gray-100"
+            >
+              ยกเลิก
+            </button>
+            <button
+              onClick={handleConfirm}
+              className="px-4 py-2 rounded-xl text-sm text-white bg-red-500 hover:bg-red-600"
+            >
+              ยืนยัน
+            </button>
+          </div>
+        </div>
+      </Modal>
 
       <Modal open={modal} onClose={() => setModal(false)} title={editId ? "แก้ไขอุปกรณ์" : "เพิ่มอุปกรณ์"}>
         <div className="space-y-4">
@@ -458,7 +492,7 @@ export default function Devices() {
                 }
                 placeholder="เช่น เราเตอร์" />
             </FormField>
-            <FormField label="แบรนด์">
+            <FormField label="แบรนด์" required>
               <Input
                 value={form.device_brand}
                 onChange={(e) =>
@@ -469,7 +503,7 @@ export default function Devices() {
                 }
                 placeholder="เช่น Ruijie-Reyee" />
             </FormField>
-            <FormField label="ประเภทอุปกรณ์">
+            <FormField label="ประเภทอุปกรณ์" required>
               <Select
                 value={form.device_category}
                 onChange={f("device_category")}
@@ -487,6 +521,36 @@ export default function Devices() {
             <button onClick={() => setModal(false)} className="px-4 py-2 rounded-xl text-sm text-gray-500 hover:bg-gray-100 transition-colors">ยกเลิก</button>
             <button onClick={handleSave} className="px-5 py-2 rounded-xl text-sm text-gray-800 transition-all hover:shadow-md" style={{ background: "#F5E87C" }}>
               {editId ? "บันทึกการแก้ไข" : "เพิ่มอุปกรณ์"}
+            </button>
+          </div>
+        </div>
+      </Modal>
+      <Modal
+        open={confirmModal}
+        onClose={() => setConfirmModal(false)}
+        title="ยืนยันการทำรายการ"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-gray-600">
+            {confirmType === "deleteDevice" &&
+              `ต้องการลบ "${selectedRow?.device_name}" ใช่หรือไม่?`}
+            {confirmType === "restoreDevice" &&
+              `ต้องการกู้คืน "${selectedRow?.device_name}" ใช่หรือไม่?`}
+            {confirmType === "deletePart" &&
+              `ต้องการลบ "${selectedPart?.partName}" ออกจากอุปกรณ์นี้หรือไม่?`}
+          </p>
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => setConfirmModal(false)}
+              className="px-4 py-2 rounded-xl text-sm text-gray-500 hover:bg-gray-100"
+            >
+              ยกเลิก
+            </button>
+            <button
+              onClick={handleConfirm}
+              className="px-4 py-2 rounded-xl text-sm text-white bg-red-500 hover:bg-red-600"
+            >
+              ยืนยัน
             </button>
           </div>
         </div>

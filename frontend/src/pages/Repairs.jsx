@@ -45,6 +45,9 @@ export default function Repairs() {
     const [search, setSearch] = useState("");
     const [error, setError] = useState("");
 
+    const [confirmModal, setConfirmModal] = useState(false);
+    const [selectedRepair, setSelectedRepair] = useState(null);
+
     const load = async () => {
         try {
             const [
@@ -74,7 +77,7 @@ export default function Repairs() {
             console.error("Load repairs error:", err);
         }
     };
-    
+
     useEffect(() => { load(); }, []);
 
     const openAdd = () => {
@@ -103,8 +106,16 @@ export default function Repairs() {
                 setError("กรุณาเลือกอุปกรณ์");
                 return;
             }
+            if (!form.part_id) {
+                setError("กรุณาเลือกอะไหล่");
+                return;
+            }
             if (!form.repair_date) {
                 setError("กรุณาเลือกวันที่ซ่อม");
+                return;
+            }
+            if (!form.request_channel) {
+                setError("กรุณาเลือกช่องทางติดต่อ");
                 return;
             }
             const payload = {
@@ -124,11 +135,16 @@ export default function Repairs() {
         }
     };
 
-    const handleDelete = async (row) => {
-        if (!confirm("Delete repair record?")) return;
+    const handleDelete = (row) => {
+        setSelectedRepair(row);
+        setConfirmModal(true);
+    };
+
+    const confirmDelete = async () => {
         try {
-            await deleteRepairs(row.repair_id);
-            await load(); // reload table
+            await deleteRepairs(selectedRepair.repair_id);
+            await load();
+            setConfirmModal(false);
         } catch (err) {
             console.error("Delete repair error:", err);
         }
@@ -357,7 +373,7 @@ export default function Repairs() {
                                 <Input value={form.device_name} onChange={f("device_name")} placeholder="Device name" />
                             )}
                         </FormField>
-                        <FormField label="อะไหล่">
+                        <FormField label="อะไหล่" required>
                             <SearchSelect
                                 options={availableParts}
                                 value={form.part_id}
@@ -374,7 +390,7 @@ export default function Repairs() {
                                 setOpen={(state) => setOpenSelect(state ? "part" : null)}
                             />
                         </FormField>
-                        <FormField label="ช่องทางแจ้ง">
+                        <FormField label="ช่องทางแจ้ง" required>
                             <Select
                                 value={form.request_channel}
                                 onChange={f("request_channel")}
@@ -388,7 +404,7 @@ export default function Repairs() {
                                 ))}
                             </Select>
                         </FormField>
-                        <FormField label="วันที่ซ่อม">
+                        <FormField label="วันที่ซ่อม" required>
                             <Input
                                 type="date"
                                 value={form.repair_date}
@@ -396,7 +412,7 @@ export default function Repairs() {
                                 max={new Date().toISOString().split("T")[0]}
                             />
                         </FormField>
-                        <FormField label="พนักงาน">
+                        <FormField label="พนักงาน" required>
                             {form.worker_ids.map((id, i) => {
                                 const usedWorkers = form.worker_ids.filter((_, idx) => idx !== i);
                                 const availableWorkers = workers.filter(
@@ -435,7 +451,7 @@ export default function Repairs() {
                             </span>
                         </FormField>
                     </div>
-                    <FormField label="สาเหตุ">
+                    <FormField label="สาเหตุ" required>
                         <Textarea value={form.cause} onChange={f("cause")} placeholder="ระบุสาเหตุ..." rows={3} />
                     </FormField>
                     <FormField label="หมายเหตุ">
@@ -445,6 +461,31 @@ export default function Repairs() {
                         <button onClick={() => setModal(false)} className="px-4 py-2 rounded-xl text-sm text-gray-500 hover:bg-gray-100 transition-colors">ยกเลิก</button>
                         <button onClick={handleSave} className="px-5 py-2 rounded-xl text-sm text-gray-800 transition-all hover:shadow-md" style={{ background: "#F5E87C" }}>
                             {editId ? "บันทึกการแก้ไข" : "เพิ่มรายการซ่อม"}
+                        </button>
+                    </div>
+                </div>
+            </Modal>
+            <Modal
+                open={confirmModal}
+                onClose={() => setConfirmModal(false)}
+                title="ยืนยันการลบ"
+            >
+                <div className="space-y-4">
+                    <p className="text-sm text-gray-600">
+                        ต้องการลบรายการซ่อมนี้ใช่หรือไม่?
+                    </p>
+                    <div className="flex justify-end gap-3">
+                        <button
+                            onClick={() => setConfirmModal(false)}
+                            className="px-4 py-2 rounded-xl text-sm text-gray-500 hover:bg-gray-100"
+                        >
+                            ยกเลิก
+                        </button>
+                        <button
+                            onClick={confirmDelete}
+                            className="px-4 py-2 rounded-xl text-sm text-white bg-red-500 hover:bg-red-600"
+                        >
+                            ลบ
                         </button>
                     </div>
                 </div>

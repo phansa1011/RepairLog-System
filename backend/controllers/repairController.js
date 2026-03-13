@@ -234,7 +234,7 @@ exports.createRepairWithWorkers = (req, res) => {
         worker_ids.length === 0
     ) {
         return res.status(400).json({
-            message: "Missing required fields or worker_ids must be a non-empty array"
+            message: "กรูณากรอกข้อมูลให้ครบ"
         });
     }
 

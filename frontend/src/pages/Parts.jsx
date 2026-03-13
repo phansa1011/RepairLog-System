@@ -28,6 +28,10 @@ export default function Parts() {
     const [search, setSearch] = useState("");
     const [error, setError] = useState("");
 
+    const [confirmModal, setConfirmModal] = useState(false);
+    const [confirmType, setConfirmType] = useState("");
+    const [selectedPart, setSelectedPart] = useState(null);
+
     const load = async () => {
         try {
             const data = await getAllPart();
@@ -60,9 +64,7 @@ export default function Parts() {
             setError("");
             const name = form.part_name?.trim();
             const type = form.part_type?.trim();
-
             const regex = /^[A-Za-zก-๙0-9\s]+$/;
-
             if (!name) {
                 setError("กรุณากรอกชื่ออะไหล่");
                 return;
@@ -110,25 +112,31 @@ export default function Parts() {
         }
     };
 
-    const handleDelete = async (row) => {
-        if (confirm(`ต้องการลบ "${row.part_name}" ใช่หรือไม่?`)) {
-            try {
-                await deletePart(row.part_id);
-                load();
-            } catch (err) {
-                alert(err.message);
-            }
-        }
+    const handleDelete = (row) => {
+        setSelectedPart(row);
+        setConfirmType("delete");
+        setConfirmModal(true);
     };
 
-    const handleRestore = async (row) => {
-        if (confirm(`ต้องการกู้คืน "${row.part_name}" ใช่หรือไม่?`)) {
-            try {
-                await restorePart(row.part_id);
-                load();
-            } catch (err) {
-                alert(err.message);
+    const handleRestore = (row) => {
+        setSelectedPart(row);
+        setConfirmType("restore");
+        setConfirmModal(true);
+    };
+
+    const handleConfirm = async () => {
+        try {
+            if (confirmType === "delete") {
+                await deletePart(selectedPart.part_id);
             }
+            if (confirmType === "restore") {
+                await restorePart(selectedPart.part_id);
+            }
+            load();
+            setConfirmModal(false);
+        } catch (err) {
+            console.error(err);
+            setError(err.message || "เกิดข้อผิดพลาด");
         }
     };
 
@@ -209,7 +217,7 @@ export default function Parts() {
                                 }
                                 placeholder="เช่น สายไฟ" />
                         </FormField>
-                        <FormField label="ประเภทอะไหร่">
+                        <FormField label="ประเภทอะไหร่" required>
                             <Select
                                 value={form.part_type}
                                 onChange={f("part_type")}
@@ -227,6 +235,36 @@ export default function Parts() {
                         <button onClick={() => setModal(false)} className="px-4 py-2 rounded-xl text-sm text-gray-500 hover:bg-gray-100 transition-colors">ยกเลิก</button>
                         <button onClick={handleSave} className="px-5 py-2 rounded-xl text-sm text-gray-800 transition-all hover:shadow-md" style={{ background: "#F5E87C" }}>
                             {editId ? "บันทึกการแก้ไข" : "เพิ่มอะไหล่"}
+                        </button>
+                    </div>
+                </div>
+            </Modal>
+            <Modal
+                open={confirmModal}
+                onClose={() => setConfirmModal(false)}
+                title="ยืนยันการทำรายการ"
+            >
+                <div className="space-y-4">
+                    <p className="text-sm text-gray-600">
+                        {confirmType === "delete" &&
+                            `ต้องการลบ "${selectedPart?.part_name}" ใช่หรือไม่?`
+                        }
+                        {confirmType === "restore" &&
+                            `ต้องการกู้คืน "${selectedPart?.part_name}" ใช่หรือไม่?`
+                        }
+                    </p>
+                    <div className="flex justify-end gap-3">
+                        <button
+                            onClick={() => setConfirmModal(false)}
+                            className="px-4 py-2 rounded-xl text-sm text-gray-500 hover:bg-gray-100"
+                        >
+                            ยกเลิก
+                        </button>
+                        <button
+                            onClick={handleConfirm}
+                            className="px-4 py-2 rounded-xl text-sm text-white bg-red-500 hover:bg-red-600"
+                        >
+                            ยืนยัน
                         </button>
                     </div>
                 </div>
