@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, ChevronDown, ChevronRight } from "lucide-react";
+import { Plus, ChevronDown, ChevronRight, Search } from "lucide-react";
 import PageHeader from "../components/shared/PageHeader";
 import DataTable from "../components/shared/DataTable";
 import Modal from "../components/shared/Modal";
@@ -43,6 +43,7 @@ export default function Repairs() {
     const [editId, setEditId] = useState(null);
     const [expandedId, setExpandedId] = useState(null);
     const [openSelect, setOpenSelect] = useState(null);
+    const [search, setSearch] = useState("");
 
     const load = async () => {
         try {
@@ -148,6 +149,19 @@ export default function Repairs() {
         setForm(p => ({ ...p, worker_ids: updated.length ? updated : [""] }));
     };
 
+    const filteredRepairs = repairs.filter(r => {
+        const location = locations.find(l => l.location_id === r.location_id)?.location_name || "";
+        const device = devices.find(d => d.device_id === r.device_id)?.device_name || "";
+        const part = parts.find(p => p.part_id === r.part_id)?.part_name || "";
+
+        const keyword = search.toLowerCase();
+
+        return (
+            location.toLowerCase().includes(keyword) ||
+            device.toLowerCase().includes(keyword) ||
+            part.toLowerCase().includes(keyword)
+        );
+    });
     const f = (k) => (e) => setForm(p => ({ ...p, [k]: e.target.value }));
 
     const handleRowClick = (repair_id) => setExpandedId(prev => prev === repair_id ? null : repair_id);
@@ -219,7 +233,15 @@ export default function Repairs() {
                     </button>
                 }
             />
-
+            <div className="relative mb-4">
+                <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                <Input
+                    className="pl-9"
+                    placeholder="ค้นหาการซ่อม..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                />
+            </div>
             <DataTable
                 columns={columns}
                 data={repairs}
@@ -228,6 +250,7 @@ export default function Repairs() {
                 expandedRowId={expandedId}
                 expandedRowRender={(row) => (
                     <div className="my-3 bg-white border border-gray-100 rounded-xl shadow-sm p-5 grid grid-cols-2 gap-x-10 gap-y-3">
+
                         <div>
                             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
                                 รายละเอียดการซ่อม
@@ -241,8 +264,8 @@ export default function Repairs() {
                                             row.workers && row.workers.length > 0
                                                 ? row.workers.map((w, i) => {
                                                     const worker = workers.find(x => x.worker_id === w.worker_id);
-                                                    if (!worker) return null;
 
+                                                    if (!worker) return "—";
                                                     return (
                                                         <div key={i}>
                                                             {worker.name} {worker.lastname}
@@ -326,8 +349,7 @@ export default function Repairs() {
                                 onChange={(val) =>
                                     setForm(p => ({
                                         ...p,
-                                        device_id: val,
-                                        part_id: ""
+                                        part_id: val
                                     }))
                                 }
                                 open={openSelect === "part"}
@@ -349,7 +371,12 @@ export default function Repairs() {
                             </Select>
                         </FormField>
                         <FormField label="วันที่ซ่อม">
-                            <Input type="date" value={form.repair_date} onChange={f("repair_date")} />
+                            <Input
+                                type="date"
+                                value={form.repair_date}
+                                onChange={f("repair_date")}
+                                max={new Date().toISOString().split("T")[0]}
+                            />
                         </FormField>
                         <FormField label="พนักงาน">
                             {form.worker_ids.map((id, i) => {

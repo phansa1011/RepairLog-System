@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, ChevronRight } from "lucide-react";
+import { Plus, Search, RotateCcw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "../utils/index";
 import PageHeader from "../components/shared/PageHeader";
@@ -12,7 +12,8 @@ import {
     getAllLocation,
     createLocation,
     updateLocation,
-    deleteLocation
+    deleteLocation,
+    restoreLocation
 } from "../api/locationApi";
 
 const empty = { location_name: "", is_active: 1 };
@@ -23,6 +24,7 @@ export default function Locations() {
     const [form, setForm] = useState(empty);
     const [editId, setEditId] = useState(null);
     const navigate = useNavigate();
+    const [search, setSearch] = useState("");
 
     useEffect(() => {
         loadLocations();
@@ -75,6 +77,22 @@ export default function Locations() {
         }
     };
 
+    const handleRestore = async (row, e) => {
+        e.stopPropagation();
+        if (confirm(`ต้องการกู้คืน "${row.location_name}" ใช่หรือไม่?`)) {
+            try {
+                await restoreLocation(row.location_id);
+                await loadLocations();
+            } catch (err) {
+                console.error(err);
+            }
+        }
+    };
+
+    const filteredLocations = locations.filter(loc =>
+        loc.location_name.toLowerCase().includes(search.toLowerCase())
+    );
+
     const f = (k) => (e) => {
         const value = k === "is_active" ? Number(e.target.value) : e.target.value;
         setForm(p => ({ ...p, [k]: value }));
@@ -93,7 +111,15 @@ export default function Locations() {
                         onEdit={() => openEdit(row)}
                         onDelete={(e) => handleDelete(row, e)}
                     />
-                ) : null
+                ) : (
+                    <button
+                        onClick={(e) => handleRestore(row, e)}
+                        className="flex items-center gap-1 px-2 py-1 text-sm text-green-700 bg-green-100 rounded-lg hover:bg-green-200"
+                    >
+                        <RotateCcw className="w-4 h-4" />
+                        กู้คืน
+                    </button>
+                )
         }
     ];
 
@@ -111,9 +137,18 @@ export default function Locations() {
                     </button>
                 }
             />
+            <div className="relative mb-4">
+                <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                <Input
+                    className="pl-9"
+                    placeholder="ค้นหาสถานที่..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                />
+            </div>
             <DataTable
                 columns={columns}
-                data={locations}
+                data={filteredLocations}
                 onRowClick={(row) => navigate(`/LocationDetail?id=${row.location_id}`)}
                 emptyMessage="ไม่มีข้อมูลสถานที่"
             />

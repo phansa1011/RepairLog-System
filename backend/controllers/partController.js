@@ -174,3 +174,54 @@ exports.deletePart = (req, res) => {
         });
     });
 };
+
+exports.restorePart = (req, res) => {
+    const { id } = req.params;
+
+    if (!Number.isInteger(Number(id)) || Number(id) <= 0) {
+        return res.status(400).json({
+            message: "Invalid part id"
+        });
+    }
+
+    const checkSql = "SELECT * FROM parts WHERE part_id = ?";
+
+    db.get(checkSql, [id], (err, rows) => {
+        if (err) {
+            return res.status(500).json({
+                message: "Database error"
+            });
+        }
+
+        if (!rows) {
+            return res.status(404).json({
+                message: "Part not found"
+            });
+        }
+
+        if (rows.is_active === 1) {
+            return res.status(400).json({
+                message: "Part already active"
+            });
+        }
+
+        const restoreSql = `
+            UPDATE parts
+            SET is_active = 1,
+                update_at = datetime('now', '+7 hours')
+            WHERE part_id = ?
+        `;
+
+        db.run(restoreSql, [id], function (err) {
+            if (err) {
+                return res.status(500).json({
+                    message: "Database error"
+                });
+            }
+            res.status(200).json({
+                message: "Part restored",
+                changes: this.changes
+            });
+        });
+    });
+};

@@ -27,3 +27,9 @@ export const deletePart = (id) => {
     method: "DELETE"
   });
 };
+
+export const restorePart = (id) => {
+  return apiFetch(`/parts/${id}`, {
+    method: "PATCH"
+  });
+};

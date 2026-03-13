@@ -184,3 +184,45 @@ exports.deleteWorker = (req, res) => {
         });
     });
 };
+
+exports.restoreWorker = (req, res) => {
+    const { id } = req.params;
+
+    const checkSql = "SELECT * FROM workers WHERE worker_id = ?";
+
+    db.get(checkSql, [id], (err, row) => {
+        if (err) {
+            return res.status(500).json({ message: "Database error" });
+        }
+
+        if (!row) {
+            return res.status(404).json({ message: "Worker not found" });
+        }
+
+        if (row.is_active === 1) {
+            return res.status(400).json({
+                message: "Worker already active"
+            });
+        }
+
+        const restoreSql = `
+            UPDATE workers
+            SET is_active = 1,
+                update_at = datetime('now', '+7 hours')
+            WHERE worker_id = ?
+        `;
+
+        db.run(restoreSql, [id], function (err) {
+            if (err) {
+                return res.status(500).json({
+                    message: "Database error"
+                });
+            }
+
+            res.status(200).json({
+                message: "Worker restored",
+                changes: this.changes
+            });
+        });
+    });
+};

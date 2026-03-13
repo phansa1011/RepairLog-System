@@ -11,5 +11,6 @@ router.get('/:id', deviceController.getDeviceById);
 router.post('/', deviceController.createDevice);
 router.put('/:id', deviceController.updateDevice);
 router.delete('/:id', deviceController.deleteDevice);
+router.patch('/:id', deviceController.restoreDevice);
 
 module.exports = router;

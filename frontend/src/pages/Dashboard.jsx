@@ -39,12 +39,12 @@ export default function Dashboard() {
     const navigate = useNavigate();
 
     useEffect(() => {
-        const token = localStorage.getItem("token");
+        const token = sessionStorage.getItem("token");
 
         if (!token) {
             navigate("/login");
         }
-    }, []);
+    }, [navigate]);
 
     const [workers, setWorkers] = useState([]);
     const [locations, setLocations] = useState([]);
@@ -182,7 +182,7 @@ export default function Dashboard() {
                             </ResponsiveContainer>
                         )}
                     </div>
-                    <div className="mt-10">
+                    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
                         <div className="flex items-center gap-2 mb-6">
                             <TrendingUp className="w-4 h-4 text-gray-400" />
                             <h2 className="text-sm font-semibold text-gray-800">
@@ -201,7 +201,7 @@ export default function Dashboard() {
                                     <XAxis type="number" tick={{ fontSize: 11, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
                                     <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: "#6b7280" }} axisLine={false} tickLine={false} width={90} />
                                     <Tooltip content={<CustomTooltip />} />
-                                    <Bar dataKey="count" fill="#C7F0D8" radius={[0, 6, 6, 0]} />
+                                    <Bar dataKey="count" fill="#A8E6C0" radius={[0, 6, 6, 0]} />
                                 </BarChart>
                             </ResponsiveContainer>
                         )}

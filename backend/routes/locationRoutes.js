@@ -11,5 +11,7 @@ router.get('/:id', locationController.getLocationById);
 router.post('/', locationController.createLocation);
 router.put('/:id', locationController.updateLocation);
 router.delete('/:id', locationController.deleteLocation);
+router.patch('/:id', locationController.restoreLocation);
+
 
 module.exports = router;

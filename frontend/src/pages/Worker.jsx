@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus } from "lucide-react";
+import { Plus, Search, RotateCcw } from "lucide-react";
 import PageHeader from "../components/shared/PageHeader";
 import DataTable from "../components/shared/DataTable";
 import Modal from "../components/shared/Modal";
@@ -10,7 +10,8 @@ import {
     getAllWorkers,
     createWorker,
     updateWorker,
-    deleteWorker
+    deleteWorker,
+    restoreWorker
 } from "../api/workerApi";
 
 const empty = { staff_id: "", name: "", lastname: "", is_active: 1 };
@@ -21,6 +22,7 @@ export default function Workers() {
     const [modal, setModal] = useState(false);
     const [form, setForm] = useState(empty);
     const [editId, setEditId] = useState(null);
+    const [search, setSearch] = useState("");
 
     useEffect(() => {
         fetchWorkers();
@@ -66,6 +68,23 @@ export default function Workers() {
         }
     };
 
+    const handleRestore = async (row) => {
+        if (confirm(`ต้องการกู้คืน "${row.name}" ใช่หรือไม่?`)) {
+            try {
+                await restoreWorker(row.worker_id);
+                await fetchWorkers();
+            } catch (err) {
+                console.error(err);
+            }
+        }
+    };
+
+    const filteredWorkers = workers.filter(w =>
+        w.staff_id?.toLowerCase().includes(search.toLowerCase()) ||
+        w.name?.toLowerCase().includes(search.toLowerCase()) ||
+        w.lastname?.toLowerCase().includes(search.toLowerCase())
+    );
+
     const f = (k) => (e) => {
         const value = k === "is_active" ? Number(e.target.value) : e.target.value;
         setForm(p => ({ ...p, [k]: value }));
@@ -85,7 +104,15 @@ export default function Workers() {
                         onEdit={() => openEdit(row)}
                         onDelete={() => handleDelete(row)}
                     />
-                ) : null
+                ) : (
+                    <button
+                        onClick={() => handleRestore(row)}
+                        className="flex items-center gap-1 px-2 py-1 text-sm text-green-700 bg-green-100 rounded-lg hover:bg-green-200"
+                    >
+                        <RotateCcw className="w-4 h-4" />
+                        กู้คืน
+                    </button>
+                )
         }
     ];
 
@@ -103,7 +130,16 @@ export default function Workers() {
                     </button>
                 }
             />
-            <DataTable columns={columns} data={workers} emptyMessage="ไม่มีข้อมูลพนักงาน" />
+            <div className="relative mb-4">
+                <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                <Input
+                    className="pl-9"
+                    placeholder="ค้นหาพนักงาน..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                />
+            </div>
+            <DataTable columns={columns} data={filteredWorkers} emptyMessage="ไม่มีข้อมูลพนักงาน" />
 
             <Modal open={modal} onClose={() => setModal(false)} title={editId ? "แก้ไขพนักงาน" : "เพิ่มพนักงาน"}>
                 <div className="space-y-4">

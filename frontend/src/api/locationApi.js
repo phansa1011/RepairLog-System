@@ -27,3 +27,9 @@ export const deleteLocation = (id) => {
     method: "DELETE"
   });
 };
+
+export const restoreLocation = (id) => {
+  return apiFetch(`/locations/${id}`, {
+    method: "PATCH"
+  });
+};

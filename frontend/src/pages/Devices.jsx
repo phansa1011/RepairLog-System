@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
-import { Plus, ChevronDown, ChevronRight, Pencil, Trash2 } from "lucide-react";
+import { Plus, ChevronDown, ChevronRight, Pencil, Trash2, Search, RotateCcw } from "lucide-react";
 import PageHeader from "../components/shared/PageHeader";
 import DataTable from "../components/shared/DataTable";
 import Modal from "../components/shared/Modal";
 import FormField, { Input, Select, Textarea } from "../components/shared/FormField";
 import StatusBadge from "../components/shared/StatusBadge";
-import { getAllDevice, createDevice, updateDevice, deleteDevice } from "../api/deviceApi";
+import { getAllDevice, createDevice, updateDevice, deleteDevice, restoreDevice } from "../api/deviceApi";
 import { getAllPart } from "../api/partApi";
 import { getAllDevicePart, createdevices, deletedevices, updatedevices } from "../api/devicePartApi";
 
@@ -28,6 +28,7 @@ export default function Devices() {
   const [addPartForm, setAddPartForm] = useState({ part_id: "" });
   const [extraParts, setExtraParts] = useState({}); // deviceId -> [{part_name, part_type}]
   const [editPartId, setEditPartId] = useState(null);
+  const [search, setSearch] = useState("");
 
   const load = async () => {
     try {
@@ -78,6 +79,17 @@ export default function Devices() {
     if (confirm(`ต้องการลบ "${row.device_name}" ใช่หรือไม่?`)) {
       try {
         await deleteDevice(row.device_id);
+        load();
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+  };
+
+  const handleRestore = async (row) => {
+    if (confirm(`ต้องการกู้คืน "${row.device_name}" ใช่หรือไม่?`)) {
+      try {
+        await restoreDevice(row.device_id);
         load();
       } catch (err) {
         alert(err.message);
@@ -140,6 +152,12 @@ export default function Devices() {
     }
   };
 
+  const filteredDevices = devices.filter(d =>
+    d.device_name?.toLowerCase().includes(search.toLowerCase()) ||
+    d.device_brand?.toLowerCase().includes(search.toLowerCase()) ||
+    d.device_category?.toLowerCase().includes(search.toLowerCase())
+  );
+
   const f = (k) => (e) => setForm(p => ({ ...p, [k]: e.target.value }));
 
   const columns = [
@@ -176,7 +194,20 @@ export default function Devices() {
       width: "120px",
       render: (_, row) => {
 
-        if (!row.is_active) return null;
+        if (!row.is_active) {
+          return (
+            <div className="flex justify-center"
+              onClick={e => e.stopPropagation()}>
+              <button
+                onClick={() => handleRestore(row)}
+                className="flex items-center gap-1 px-2 py-1 text-xs text-green-700 bg-green-100 rounded-lg hover:bg-green-200"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                กู้คืน
+              </button>
+            </div>
+          );
+        }
 
         return (
           <div
@@ -224,9 +255,19 @@ export default function Devices() {
         }
       />
 
+      <div className="relative mb-4">
+        <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+        <Input
+          className="pl-9"
+          placeholder="ค้นหาอุปกรณ์..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+      </div>
+
       <DataTable
         columns={columns}
-        data={devices}
+        data={filteredDevices}
         rowKey="device_id"
         onRowClick={(row) => handleRowClick(row.device_id)}
         expandedRowId={expandedId}
@@ -240,13 +281,15 @@ export default function Devices() {
                   อะไหล่ที่ใช้ในอุปกรณ์
                 </p>
 
-                <button
-                  onClick={openAddPart}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-gray-800 shadow-sm hover:shadow-md transition-all"
-                  style={{ background: "#F5E87C" }}
-                >
-                  <Plus className="w-3.5 h-3.5" /> เพิ่มอะไหล่
-                </button>
+                {Boolean(row.is_active) && (
+                  <button
+                    onClick={openAddPart}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-gray-800 shadow-sm hover:shadow-md transition-all"
+                    style={{ background: "#F5E87C" }}
+                  >
+                    <Plus className="w-3.5 h-3.5" /> เพิ่มอะไหล่
+                  </button>
+                )}
               </div>
               {parts.length === 0 ? (
                 <p className="text-sm text-gray-400 italic">

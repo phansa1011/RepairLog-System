@@ -27,3 +27,9 @@ export const deleteDevice = (id) => {
     method: "DELETE"
   });
 };
+
+export const restoreDevice = (id) => {
+  return apiFetch(`/devices/${id}`, {
+    method: "PATCH"
+  });
+};

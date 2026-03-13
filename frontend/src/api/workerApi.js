@@ -32,3 +32,10 @@ export const deleteWorker = (id) => {
     method: "DELETE"
   });
 };
+
+// PATCH /api/workers/:id
+export const restoreWorker = (id) => {
+  return apiFetch(`/workers/${id}`, {
+    method: "PATCH"
+  });
+};

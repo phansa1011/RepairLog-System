@@ -14,9 +14,6 @@ const navItems = [
   { label: "การซ่อม", page: "Repairs", icon: Wrench },
 ];
 
-//ถ้าเพิ่ม user ได้แล้วค่อยเรียกใช้แล้วปลดคอมเมนท์นะ
-//const [user, setUser] = useState(null);
-
 export default function Layout({ children, currentPageName }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const navigate = useNavigate();
@@ -27,16 +24,16 @@ export default function Layout({ children, currentPageName }) {
     if (!token) {
       navigate(createPageUrl("Login"), { replace: true });
     }
-  }, []);
+  }, [navigate]);
 
   useEffect(() => {
-    const loginTime = sessionStorage.getItem("loginTime");
+    const loginTime = Number(sessionStorage.getItem("loginTime"));
 
     if (loginTime) {
       const now = Date.now();
       const diff = now - loginTime;
 
-      const threeHours = 3 * 60 * 60 * 1000;
+      const threeHours = 8 * 60 * 60 * 1000;
 
       // ถ้าเกิน 3 ชั่วโมงแล้ว
       if (diff > threeHours) {
@@ -55,7 +52,7 @@ export default function Layout({ children, currentPageName }) {
         return () => clearTimeout(timer);
       }
     }
-  }, []);
+  }, [navigate]);
 
   const isLoginPage = currentPageName === "Login";
 
@@ -108,14 +105,6 @@ export default function Layout({ children, currentPageName }) {
 
           {/* Right side */}
           <div className="flex items-center gap-3">
-            {/*{user && (
-              <div className="hidden md:flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-xs font-semibold text-gray-600">
-                  {user.full_name?.charAt(0)?.toUpperCase() || "U"}
-                </div>
-                <span className="text-sm text-gray-600 font-medium">{user.full_name || user.email}</span>
-              </div>
-            )}*/}
             <button
               onClick={() => {
                 sessionStorage.removeItem("token");
@@ -158,7 +147,8 @@ export default function Layout({ children, currentPageName }) {
             })}
             <button
               onClick={() => {
-                localStorage.removeItem("token");
+                sessionStorage.removeItem("token");
+                sessionStorage.removeItem("loginTime");
                 navigate(createPageUrl("Login"), { replace: true });
               }}
               className="flex items-center gap-2 w-full px-3 py-2.5 text-sm text-gray-500 hover:text-gray-800 rounded-lg hover:bg-gray-50"

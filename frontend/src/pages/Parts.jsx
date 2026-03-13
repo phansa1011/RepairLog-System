@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus } from "lucide-react";
+import { Plus, Search, RotateCcw } from "lucide-react";
 import PageHeader from "../components/shared/PageHeader";
 import DataTable from "../components/shared/DataTable";
 import Modal from "../components/shared/Modal";
@@ -10,7 +10,8 @@ import {
     getAllPart,
     createPart,
     updatePart,
-    deletePart
+    deletePart,
+    restorePart
 } from "../api/partApi";
 
 const empty = { part_name: "", part_type: "", is_active: 1 };
@@ -20,6 +21,7 @@ export default function Parts() {
     const [modal, setModal] = useState(false);
     const [form, setForm] = useState(empty);
     const [editId, setEditId] = useState(null);
+    const [search, setSearch] = useState("");
 
     const load = async () => {
         try {
@@ -29,7 +31,18 @@ export default function Parts() {
             console.error("Load parts error:", err);
         }
     };
-    useEffect(load, []);
+
+    useEffect(() => {
+        const fetchParts = async () => {
+            try {
+                const data = await getAllPart();
+                setParts(data);
+            } catch (err) {
+                console.error("Load parts error:", err);
+            }
+        };
+        fetchParts();
+    }, []);
 
     const openAdd = () => { setForm(empty); setEditId(null); setModal(true); };
     const openEdit = (row) => { setForm({ ...row }); setEditId(row.part_id); setModal(true); };
@@ -69,6 +82,22 @@ export default function Parts() {
         }
     };
 
+    const handleRestore = async (row) => {
+        if (confirm(`ต้องการกู้คืน "${row.part_name}" ใช่หรือไม่?`)) {
+            try {
+                await restorePart(row.part_id);
+                load();
+            } catch (err) {
+                alert(err.message);
+            }
+        }
+    };
+
+    const filteredParts = parts.filter(p =>
+        p.part_name?.toLowerCase().includes(search.toLowerCase()) ||
+        p.part_type?.toLowerCase().includes(search.toLowerCase())
+    );
+
     const f = (k) => (e) => setForm(p => ({ ...p, [k]: e.target.value }));
 
     const columns = [
@@ -85,7 +114,15 @@ export default function Parts() {
                         onEdit={() => openEdit(row)}
                         onDelete={() => handleDelete(row)}
                     />
-                ) : null
+                ) : (
+                    <button
+                        onClick={(e) => handleRestore(row, e)}
+                        className="flex items-center gap-1 px-2 py-1 text-sm text-green-700 bg-green-100 rounded-lg hover:bg-green-200"
+                    >
+                        <RotateCcw className="w-4 h-4" />
+                        กู้คืน
+                    </button>
+                )
         }
     ];
 
@@ -103,7 +140,16 @@ export default function Parts() {
                     </button>
                 }
             />
-            <DataTable columns={columns} data={parts} emptyMessage="ไม่พบข้อมูลอะไหล่" />
+            <div className="relative mb-4">
+                <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                <Input
+                    className="pl-9"
+                    placeholder="ค้นหาอะไหล่..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                />
+            </div>
+            <DataTable columns={columns} data={filteredParts} emptyMessage="ไม่พบข้อมูลอะไหล่" />
 
             <Modal open={modal} onClose={() => setModal(false)} title={editId ? "แก้ไขอะไหล่" : "เพิ่มอะไหล่"}>
                 <div className="space-y-4">
