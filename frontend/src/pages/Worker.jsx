@@ -23,6 +23,7 @@ export default function Workers() {
     const [form, setForm] = useState(empty);
     const [editId, setEditId] = useState(null);
     const [search, setSearch] = useState("");
+    const [error, setError] = useState("");
 
     useEffect(() => {
         fetchWorkers();
@@ -39,21 +40,69 @@ export default function Workers() {
         }
     };
 
-    const openAdd = () => { setForm(empty); setEditId(null); setModal(true); };
-    const openEdit = (row) => { setForm({ ...row }); setEditId(row.worker_id); setModal(true); };
+    const openAdd = () => {
+        setForm(empty);
+        setEditId(null);
+        setError("");
+        setModal(true);
+    };
+    const openEdit = (row) => {
+        setForm({ ...row });
+        setEditId(row.worker_id);
+        setError("");
+        setModal(true);
+    };
+
+    const thaiRegex = /^[ก-๙]+$/;
+    const engRegex = /^[A-Za-z]+$/;
 
     const handleSave = async () => {
         try {
+            setError("");
+
+            const name = form.name.trim();
+            const lastname = form.lastname.trim();
+
+            const isThaiName = thaiRegex.test(name);
+            const isEngName = engRegex.test(name);
+
+            const isThaiLast = thaiRegex.test(lastname);
+            const isEngLast = engRegex.test(lastname);
+
+            const staffRegex = /^[A-Za-z0-9]+$/;
+
+            if (!staffRegex.test(form.staff_id)) {
+                setError("รหัสพนักงานใช้ได้เฉพาะ A-Z และ 0-9");
+                return;
+            }
+
+            //ต้องเป็นตัวอักษรเท่านั้น
+            if (!isThaiName && !isEngName) {
+                setError("ชื่อใช้ได้เฉพาะตัวอักษรเท่านั้น");
+                return;
+            }
+            if (!isThaiLast && !isEngLast) {
+                setError("นามสกุลใช้ได้เฉพาะตัวอักษรเท่านั้น");
+                return;
+            }
+
+            //ต้องเป็นภาษาเดียวกัน
+            if ((isThaiName && isEngLast) || (isEngName && isThaiLast)) {
+                setError("ชื่อและนามสกุลต้องเป็นภาษาเดียวกัน");
+                return;
+            }
             if (editId) {
                 await updateWorker(editId, form);
             } else {
                 await createWorker(form);
             }
-
             await fetchWorkers();
             setModal(false);
         } catch (err) {
             console.error(err);
+            setError(
+                err.message || "เกิดข้อผิดพลาด"
+            );
         }
     };
 
@@ -143,15 +192,43 @@ export default function Workers() {
 
             <Modal open={modal} onClose={() => setModal(false)} title={editId ? "แก้ไขพนักงาน" : "เพิ่มพนักงาน"}>
                 <div className="space-y-4">
+                    {error && (
+                        <div className="p-2 text-sm text-red-600 bg-red-50 rounded-lg">
+                            {error}
+                        </div>
+                    )}
                     <div className="grid grid-cols-1 gap-4">
                         <FormField label="รหัสพนักงาน">
-                            <Input value={form.staff_id || ""} onChange={f("staff_id")} placeholder="A1234" />
+                            <Input
+                                value={form.staff_id || ""}
+                                onChange={(e) =>
+                                    setForm(p => ({
+                                        ...p,
+                                        staff_id: e.target.value.replace(/[^A-Za-z0-9]/g, "")
+                                    }))
+                                }
+                                placeholder="A1234"
+                            />
                         </FormField>
                         <FormField label="ชื่อ">
-                            <Input value={form.name || ""} onChange={f("name")} placeholder="สมชาย" />
+                            <Input
+                                value={form.name || ""}
+                                onChange={(e) =>
+                                    setForm(p => ({
+                                        ...p,
+                                        name: e.target.value.replace(/\s/g, "")
+                                    }))
+                                } placeholder="สมชาย" />
                         </FormField>
                         <FormField label="นามสกุล">
-                            <Input value={form.lastname || ""} onChange={f("lastname")} placeholder="กล้าหาญ" />
+                            <Input
+                                value={form.lastname || ""}
+                                onChange={(e) =>
+                                    setForm(p => ({
+                                        ...p,
+                                        lastname: e.target.value.replace(/\s/g, "")
+                                    }))
+                                } placeholder="กล้าหาญ" />
                         </FormField>
                     </div>
                     <div className="flex justify-end gap-3 pt-2">

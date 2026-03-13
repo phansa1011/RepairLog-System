@@ -74,7 +74,7 @@ export function SearchSelect({
       />
 
       {open && (
-        <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow max-h-40 overflow-auto">
+        <div className="absolute z-20 w-full mt-1 bg-white border border-black shadow max-h-40 overflow-auto">
           {filtered.length > 0 ? (
             filtered.map((o) => (
               <div

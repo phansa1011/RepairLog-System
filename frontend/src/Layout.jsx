@@ -79,7 +79,7 @@ export default function Layout({ children, currentPageName }) {
             <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "var(--accent)" }}>
               <Wrench className="w-4 h-4 text-gray-800" />
             </div>
-            <span className="font-semibold text-gray-900 text-sm tracking-tight">RepairMS</span>
+            <span className="font-semibold text-gray-900 text-sm tracking-tight">RepairLog</span>
           </div>
 
           {/* Desktop Nav */}

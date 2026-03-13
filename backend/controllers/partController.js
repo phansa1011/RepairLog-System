@@ -44,7 +44,7 @@ exports.createPart = (req, res) => {
     }
     if (!part_type || !part_type.trim()) {
         return res.status(400).json({
-            message: "part_type is required"
+            message: "มีอะไหล่นี้อยู่แล้ว"
         });
     }
 
@@ -108,7 +108,7 @@ exports.updatePart = (req, res) => {
                 //ถ้ามี UNIQUE constraint
                 if (err.message.includes("UNIQUE")) {
                     return res.status(409).json({
-                        message: "Part name already exists"
+                        message: "มีอะไหล่นี้อยู่แล้ว"
                     });
                 }
                 return res.status(500).json({

@@ -3,7 +3,7 @@ import { Plus, Search, RotateCcw } from "lucide-react";
 import PageHeader from "../components/shared/PageHeader";
 import DataTable from "../components/shared/DataTable";
 import Modal from "../components/shared/Modal";
-import FormField, { Input } from "../components/shared/FormField";
+import FormField, { Input, Select } from "../components/shared/FormField";
 import ActionButtons from "../components/shared/ActionButtons";
 import StatusBadge from "../components/shared/StatusBadge";
 import {
@@ -16,12 +16,17 @@ import {
 
 const empty = { part_name: "", part_type: "", is_active: 1 };
 
+const partTypes = [
+    "สายไฟ",
+    "อื่นๆ"
+];
 export default function Parts() {
     const [parts, setParts] = useState([]);
     const [modal, setModal] = useState(false);
     const [form, setForm] = useState(empty);
     const [editId, setEditId] = useState(null);
     const [search, setSearch] = useState("");
+    const [error, setError] = useState("");
 
     const load = async () => {
         try {
@@ -33,41 +38,75 @@ export default function Parts() {
     };
 
     useEffect(() => {
-        const fetchParts = async () => {
-            try {
-                const data = await getAllPart();
-                setParts(data);
-            } catch (err) {
-                console.error("Load parts error:", err);
-            }
-        };
-        fetchParts();
+        load();
     }, []);
 
-    const openAdd = () => { setForm(empty); setEditId(null); setModal(true); };
-    const openEdit = (row) => { setForm({ ...row }); setEditId(row.part_id); setModal(true); };
+    const openAdd = () => {
+        setForm(empty);
+        setEditId(null);
+        setError("");
+        setModal(true);
+    };
+
+    const openEdit = (row) => {
+        setForm({ ...row });
+        setEditId(row.part_id);
+        setError("");
+        setModal(true);
+    };
 
     const handleSave = async () => {
         try {
+            setError("");
+            const name = form.part_name?.trim();
+            const type = form.part_type?.trim();
+
+            const regex = /^[A-Za-zก-๙0-9\s]+$/;
+
+            if (!name) {
+                setError("กรุณากรอกชื่ออะไหล่");
+                return;
+            }
+            if (!regex.test(name)) {
+                setError("ชื่ออะไหล่ห้ามมีอักขระพิเศษ");
+                return;
+            }
+            if (!type) {
+                setError("กรุณากรอกประเภทอะไหล่");
+                return;
+            }
+
+            const normalize = (str) =>
+                str.toLowerCase().replace(/\s+/g, "");
+
+            const duplicate = parts.find(
+                p =>
+                    normalize(p.part_name) === normalize(name) &&
+                    normalize(p.part_type) === normalize(type) &&
+                    p.part_id !== editId
+            );
+
+            if (duplicate) {
+                setError("มีอะไหล่นี้อยู่แล้ว");
+                return;
+            }
 
             if (editId) {
                 await updatePart(editId, {
-                    part_name: form.part_name,
-                    part_type: form.part_type
+                    part_name: name,
+                    part_type: type
                 });
-
             } else {
                 await createPart({
-                    part_name: form.part_name,
-                    part_type: form.part_type
+                    part_name: name,
+                    part_type: type
                 });
             }
-
             setModal(false);
-            load(); // reload table
-
+            load();
         } catch (err) {
-            alert(err.message);
+            console.error(err);
+            setError(err.message || "เกิดข้อผิดพลาด");
         }
     };
 
@@ -153,12 +192,35 @@ export default function Parts() {
 
             <Modal open={modal} onClose={() => setModal(false)} title={editId ? "แก้ไขอะไหล่" : "เพิ่มอะไหล่"}>
                 <div className="space-y-4">
+                    {error && (
+                        <div className="p-2 text-sm text-red-600 bg-red-50 rounded-lg">
+                            {error}
+                        </div>
+                    )}
                     <div className="grid grid-cols-2 gap-4">
                         <FormField label="ชื่ออะไหล่" required>
-                            <Input value={form.part_name} onChange={f("part_name")} placeholder="เช่น สายไฟ" />
+                            <Input
+                                value={form.part_name}
+                                onChange={(e) =>
+                                    setForm(p => ({
+                                        ...p,
+                                        part_name: e.target.value.trimStart()
+                                    }))
+                                }
+                                placeholder="เช่น สายไฟ" />
                         </FormField>
                         <FormField label="ประเภทอะไหร่">
-                            <Input value={form.part_type} onChange={f("part_type")} placeholder="เช่น สายไฟ" />
+                            <Select
+                                value={form.part_type}
+                                onChange={f("part_type")}
+                            >
+                                <option value="">เลือกประเภท</option>
+                                {partTypes.map(type => (
+                                    <option key={type} value={type}>
+                                        {type}
+                                    </option>
+                                ))}
+                            </Select>
                         </FormField>
                     </div>
                     <div className="flex justify-end gap-3 pt-2">

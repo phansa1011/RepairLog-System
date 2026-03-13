@@ -25,6 +25,7 @@ export default function Locations() {
     const [editId, setEditId] = useState(null);
     const navigate = useNavigate();
     const [search, setSearch] = useState("");
+    const [error, setError] = useState("");
 
     useEffect(() => {
         loadLocations();
@@ -39,28 +40,65 @@ export default function Locations() {
         }
     };
 
-    const openAdd = () => { setForm(empty); setEditId(null); setModal(true); };
+    const openAdd = () => {
+        setForm(empty);
+        setEditId(null);
+        setError("");
+        setModal(true);
+    };
     const openEdit = (row) => {
         setForm({ ...row });
         setEditId(row.location_id);
+        setError("");
         setModal(true);
+    };
+
+    const thaiRegex = /^[\u0E00-\u0E7F.]+$/;
+    const engRegex = /^[A-Za-z.]+$/;
+
+    const normalize = (text) => {
+        return text.replace(/\s+/g, "").trim();
     };
 
     const handleSave = async () => {
         try {
-            if (editId) {
-                await updateLocation(editId, form);
-            } else {
-                await createLocation(form);
+            setError("");
+            let name = normalize(form.location_name);
+
+            if (!name) {
+                setError("กรุณากรอกชื่อสถานที่");
+                return;
             }
 
+            const isThai = thaiRegex.test(name);
+            const isEng = engRegex.test(name);
+
+            // ต้องเป็นตัวอักษรเท่านั้น
+            if (!isThai && !isEng) {
+                setError("ชื่อสถานที่ใช้ได้เฉพาะตัวอักษรเท่านั้น");
+                return;
+            }
+            // ห้ามปนภาษา
+            if (isThai && isEng) {
+                setError("ชื่อสถานที่ต้องเป็นภาษาเดียวกัน");
+                return;
+            }
+            const payload = {
+                ...form,
+                location_name: name
+            };
+            if (editId) {
+                await updateLocation(editId, payload);
+            } else {
+                await createLocation(payload);
+            }
             await loadLocations();
             setModal(false);
             setForm(empty);
             setEditId(null);
-
         } catch (err) {
             console.error(err);
+            setError(err.message || "เกิดข้อผิดพลาด");
         }
     };
 
@@ -155,9 +193,22 @@ export default function Locations() {
 
             <Modal open={modal} onClose={() => setModal(false)} title={editId ? "แก้ไขสถานที่" : "เพิ่มสถานที่"}>
                 <div className="space-y-4">
+                    {error && (
+                        <div className="p-2 text-sm text-red-600 bg-red-50 rounded-lg">
+                            {error}
+                        </div>
+                    )}
                     <div className="grid grid-cols-2 gap-4">
                         <FormField label="ชื่อสถานที่" required>
-                            <Input value={form.location_name} onChange={f("location_name")} placeholder="เช่น โรงเรียน" />
+                            <Input
+                                value={form.location_name}
+                                onChange={(e) =>
+                                    setForm(p => ({
+                                        ...p,
+                                        location_name: e.target.value.replace(/\s/g, "")
+                                    }))
+                                }
+                                placeholder="เช่น โรงเรียน" />
                         </FormField>
                     </div>
                     <div className="flex justify-end gap-3 pt-2">

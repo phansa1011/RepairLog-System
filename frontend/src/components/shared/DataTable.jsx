@@ -1,3 +1,4 @@
+import React from "react";
 export default function DataTable({ columns, data, onRowClick, expandedRowRender, expandedRowId, rowKey = "id", emptyMessage = "No records found" }) {
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
@@ -28,7 +29,7 @@ export default function DataTable({ columns, data, onRowClick, expandedRowRender
                 const key = row[rowKey] || idx;
 
                 return (
-                  <>
+                  <React.Fragment key={key}>
                     <tr
                       key={key}
                       onClick={() => onRowClick?.(row)}
@@ -52,7 +53,7 @@ export default function DataTable({ columns, data, onRowClick, expandedRowRender
                         </td>
                       </tr>
                     )}
-                  </>
+                  </React.Fragment>
                 );
               })
             )}

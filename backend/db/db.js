@@ -20,7 +20,9 @@ db.run(`
         lastname TEXT NOT NULL,
         create_at DATETIME DEFAULT (datetime('now', '+7 hours')),
         update_at DATETIME,
-        is_active INTEGER DEFAULT 1
+        is_active INTEGER DEFAULT 1,
+
+        UNIQUE(name, lastname)
     )`
 );
 
@@ -39,12 +41,14 @@ db.run(`
 db.run(`
     CREATE TABLE IF NOT EXISTS devices (
         device_id INTEGER PRIMARY KEY AUTOINCREMENT,
-        device_name TEXT UNIQUE NOT NULL,
+        device_name TEXT NOT NULL,
         device_brand TEXT NOT NULL,
         device_category TEXT NOT NULL,
         create_at DATETIME DEFAULT (datetime('now', '+7 hours')),
         update_at DATETIME,
-        is_active INTEGER DEFAULT 1
+        is_active INTEGER DEFAULT 1,
+
+        UNIQUE(device_name, device_brand)
     )`
 );
 

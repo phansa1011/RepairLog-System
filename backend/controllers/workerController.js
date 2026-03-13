@@ -66,9 +66,14 @@ exports.createWorker = (req, res) => {
 
     db.run(sql, [staff_id, name, lastname], function (err) {
         if (err) {
-            if (err.message.includes("UNIQUE constraint failed")) {
+            if (err.message.includes("workers.staff_id")) {
                 return res.status(409).json({
-                    message: "Staff id already exists"
+                    message: "รหัสพนักงานนี้มีอยู่แล้ว"
+                });
+            }
+            if (err.message.includes("workers.name")) {
+                return res.status(409).json({
+                    message: "ชื่อและนามสกุลนี้มีอยู่แล้ว"
                 });
             }
             return res.status(500).json({

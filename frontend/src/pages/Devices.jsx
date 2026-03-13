@@ -12,9 +12,13 @@ import { getAllDevicePart, createdevices, deletedevices, updatedevices } from ".
 const empty = {
   device_name: "",
   device_brand: "",
-  device_category: "other",
+  device_category: "",
   is_active: 1
 };
+
+const deviceCategories = [
+  "อื่นๆ"
+];
 
 export default function Devices() {
   const [devices, setDevices] = useState([]);
@@ -29,6 +33,7 @@ export default function Devices() {
   const [extraParts, setExtraParts] = useState({}); // deviceId -> [{part_name, part_type}]
   const [editPartId, setEditPartId] = useState(null);
   const [search, setSearch] = useState("");
+  const [error, setError] = useState("");
 
   const load = async () => {
     try {
@@ -50,28 +55,91 @@ export default function Devices() {
     }
   }, [expandedId]);
 
-  const openAdd = () => { setForm(empty); setEditId(null); setModal(true); };
-  const openEdit = (row) => { setForm({ ...row }); setEditId(row.device_id); setModal(true); };
+  const openAdd = () => {
+    setForm(empty);
+    setEditId(null);
+    setError("");
+    setModal(true);
+  };
+  const openEdit = (row) => {
+    setForm({ ...row });
+    setEditId(row.device_id);
+    setError("");
+    setModal(true);
+  };
 
   const handleSave = async () => {
     try {
+      setError("");
+
+      const name = form.device_name?.trim();
+      const brand = form.device_brand?.trim();
+
+      const regex = /^[A-Za-zก-๙0-9\s]+$/;
+
+      if (!name) {
+        setError("กรุณากรอกชื่ออุปกรณ์");
+        return;
+      }
+      if (!regex.test(name)) {
+        setError("ชื่ออุปกรณ์ห้ามมีอักขระพิเศษ");
+        return;
+      }
+      if (!brand) {
+        setError("กรุณากรอกแบรนด์อุปกรณ์");
+        return;
+      }
+      if (!regex.test(brand)) {
+        setError("ชื่อแบรนด์ห้ามมีอักขระพิเศษ");
+        return;
+      }
+      if (!form.device_category) {
+        setError("กรุณาเลือกประเภทอุปกรณ์");
+        return;
+      }
+
+      const normalize = (str) =>
+        str.toLowerCase().replace(/\s+/g, "");
+
+      const duplicate = devices.find(
+        d =>
+          normalize(d.device_name) === normalize(name) &&
+          normalize(d.device_brand) === normalize(brand) &&
+          d.device_id !== editId
+      );
+
+      if (duplicate) {
+        setError("มีอุปกรณ์ชื่อและแบรนด์นี้อยู่แล้ว");
+        return;
+      }
       if (editId) {
         await updateDevice(editId, {
-          device_name: form.device_name,
-          device_brand: form.device_brand,
+          device_name: name,
+          device_brand: brand,
           device_category: form.device_category
         });
       } else {
         await createDevice({
-          device_name: form.device_name,
-          device_brand: form.device_brand,
+          device_name: name,
+          device_brand: brand,
           device_category: form.device_category
         });
       }
       setModal(false);
-      load();   // reload table
+      load();
     } catch (err) {
-      alert(err.message);
+      console.error(err);
+
+      const msg = err.message || "";
+
+      if (
+        msg.includes("UNIQUE") ||
+        msg.includes("already exists")
+      ) {
+        setError("มีอุปกรณ์ชื่อและแบรนด์นี้อยู่แล้ว");
+      } else {
+        setError("เกิดข้อผิดพลาด");
+      }
     }
   };
 
@@ -371,19 +439,46 @@ export default function Devices() {
         </div>
       </Modal>
 
-      <Modal open={modal} onClose={() => setModal(false)} title={editId ? "Edit Device" : "Add Device"}>
+      <Modal open={modal} onClose={() => setModal(false)} title={editId ? "แก้ไขอุปกรณ์" : "เพิ่มอุปกรณ์"}>
         <div className="space-y-4">
+          {error && (
+            <div className="p-2 text-sm text-red-600 bg-red-50 rounded-lg">
+              {error}
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-4">
             <FormField label="ชื่ออุปกรณ์" required>
-              <Input value={form.device_name} onChange={f("device_name")} placeholder="เช่น เราเตอร์" />
+              <Input
+                value={form.device_name}
+                onChange={(e) =>
+                  setForm(p => ({
+                    ...p,
+                    device_name: e.target.value.trimStart()
+                  }))
+                }
+                placeholder="เช่น เราเตอร์" />
             </FormField>
             <FormField label="แบรนด์">
-              <Input value={form.device_brand} onChange={f("device_brand")} placeholder="เช่น Ruijie Reyee" />
+              <Input
+                value={form.device_brand}
+                onChange={(e) =>
+                  setForm(p => ({
+                    ...p,
+                    device_brand: e.target.value.trimStart()
+                  }))
+                }
+                placeholder="เช่น Ruijie-Reyee" />
             </FormField>
             <FormField label="ประเภทอุปกรณ์">
-              <Select value={form.device_category} onChange={f("device_category")}>
-                {["other"].map(c => (
-                  <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>
+              <Select
+                value={form.device_category}
+                onChange={f("device_category")}
+              >
+                <option value="">เลือกประเภท</option>
+                {deviceCategories.map(type => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
                 ))}
               </Select>
             </FormField>

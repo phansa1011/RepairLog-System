@@ -22,7 +22,6 @@ const empty = {
     request_channel: "",
     note: ""
 };
-
 const requestChannels = [
     "โทรศัพท์",
     "LINE",
@@ -44,6 +43,7 @@ export default function Repairs() {
     const [expandedId, setExpandedId] = useState(null);
     const [openSelect, setOpenSelect] = useState(null);
     const [search, setSearch] = useState("");
+    const [error, setError] = useState("");
 
     const load = async () => {
         try {
@@ -74,29 +74,43 @@ export default function Repairs() {
             console.error("Load repairs error:", err);
         }
     };
-    useEffect(() => {
-        load();
-    }, []);
+    
+    useEffect(() => { load(); }, []);
 
-    const openAdd = () => { setForm(empty); setEditId(null); setModal(true); };
+    const openAdd = () => {
+        setForm(empty);
+        setEditId(null);
+        setError("");
+        setModal(true);
+    };
     const openEdit = (row) => {
         setForm({
             ...row,
             worker_ids: row.workers?.map(w => w.worker_id) || [""]
         });
         setEditId(row.repair_id);
+        setError("");
         setModal(true);
     };
-
     const handleSave = async () => {
         try {
+            setError("");
+            if (!form.location_id) {
+                setError("กรุณาเลือกสถานที่");
+                return;
+            }
+            if (!form.device_id) {
+                setError("กรุณาเลือกอุปกรณ์");
+                return;
+            }
+            if (!form.repair_date) {
+                setError("กรุณาเลือกวันที่ซ่อม");
+                return;
+            }
             const payload = {
                 ...form,
                 worker_ids: form.worker_ids.filter(Boolean)
             };
-            console.log("FORM:", form);
-            console.log("PAYLOAD:", payload);
-
             if (editId) {
                 await updateRepairs(editId, payload);
             } else {
@@ -106,6 +120,7 @@ export default function Repairs() {
             setModal(false);
         } catch (err) {
             console.error("Save repair error:", err);
+            setError(err.message || "เกิดข้อผิดพลาด");
         }
     };
 
@@ -127,7 +142,6 @@ export default function Repairs() {
                 dp.device_id === Number(form.device_id) &&
                 dp.part_id === p.part_id
         );
-
         return linked && p.is_active === 1;
     });
 
@@ -155,7 +169,6 @@ export default function Repairs() {
         const part = parts.find(p => p.part_id === r.part_id)?.part_name || "";
 
         const keyword = search.toLowerCase();
-
         return (
             location.toLowerCase().includes(keyword) ||
             device.toLowerCase().includes(keyword) ||
@@ -302,6 +315,11 @@ export default function Repairs() {
 
             <Modal open={modal} onClose={() => setModal(false)} title={editId ? "แก้ไขรายการซ่อม" : "เพิ่มรายการซ่อม"} width="max-w-2xl">
                 <div className="space-y-4">
+                    {error && (
+                        <div className="p-2 text-sm text-red-600 bg-red-50 rounded-lg">
+                            {error}
+                        </div>
+                    )}
                     <div className="grid grid-cols-2 gap-4">
                         <FormField label="สถานที่" required>
                             {locations.length > 0 ? (
@@ -409,7 +427,6 @@ export default function Repairs() {
                                     </div>
                                 );
                             })}
-
                             <span
                                 onClick={addWorker}
                                 className="text-sm text-blue-500 cursor-pointer hover:underline"

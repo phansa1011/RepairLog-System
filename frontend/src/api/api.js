@@ -7,9 +7,9 @@ export async function apiFetch(endpoint, options = {}) {
     "Content-Type": "application/json",
     ...(fetchOptions.headers || {})
   };
-  
+
   if (auth) {
-    const token = localStorage.getItem("token");
+    const token = sessionStorage.getItem("token");
     if (token) {
       headers.Authorization = `Bearer ${token}`;
     }
@@ -23,7 +23,7 @@ export async function apiFetch(endpoint, options = {}) {
   const data = await res.json();
 
   if (!res.ok) {
-    throw new Error(data.message || "API error");
+    throw new Error(data.message || data.error || "API error");
   }
 
   return data;

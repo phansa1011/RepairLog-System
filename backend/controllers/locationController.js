@@ -49,7 +49,7 @@ exports.createLocation = (req, res) => {
         if (err) {
             if (err.message.includes("UNIQUE constraint failed")) {
                 return res.status(409).json({
-                    message: "Location name already exists"
+                    message: "สถานที่นี้มีอยู่แล้ว"
                 });
             }
             return res.status(500).json({
@@ -97,7 +97,7 @@ exports.updateLocation = (req, res) => {
                 //ถ้ามี UNIQUE constraint
                 if (err.message.includes("UNIQUE")) {
                     return res.status(409).json({
-                        message: "Location name already exists"
+                        message: "สถานที่นี้มีอยู่แล้ว"
                     });
                 }
                 return res.status(500).json({
