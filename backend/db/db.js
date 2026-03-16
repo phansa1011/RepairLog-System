@@ -37,16 +37,38 @@ db.run(`
     )`
 );
 
+//categories
+db.run(`
+    CREATE TABLE IF NOT EXISTS categories (
+        category_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        category_name TEXT UNIQUE NOT NULL,
+        create_at DATETIME DEFAULT (datetime('now', '+7 hours')),
+        update_at DATETIME
+    )`
+);
+
+//types
+db.run(`
+    CREATE TABLE IF NOT EXISTS types (
+        type_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        type_name TEXT UNIQUE NOT NULL,
+        create_at DATETIME DEFAULT (datetime('now', '+7 hours')),
+        update_at DATETIME
+    )`
+);
+
 //devices
 db.run(`
     CREATE TABLE IF NOT EXISTS devices (
         device_id INTEGER PRIMARY KEY AUTOINCREMENT,
         device_name TEXT NOT NULL,
         device_brand TEXT NOT NULL,
-        device_category TEXT NOT NULL,
+        category_id INTEGER NOT NULL,
         create_at DATETIME DEFAULT (datetime('now', '+7 hours')),
         update_at DATETIME,
         is_active INTEGER DEFAULT 1,
+
+        FOREIGN KEY (category_id) REFERENCES categories(category_id),
 
         UNIQUE(device_name, device_brand)
     )`
@@ -57,10 +79,12 @@ db.run(`
     CREATE TABLE IF NOT EXISTS parts (
         part_id INTEGER PRIMARY KEY AUTOINCREMENT,
         part_name TEXT UNIQUE NOT NULL,
-        part_type TEXT NOT NULL,
+        type_id INTEGER NOT NULL,
         create_at DATETIME DEFAULT (datetime('now', '+7 hours')),
         update_at DATETIME,
-        is_active INTEGER DEFAULT 1
+        is_active INTEGER DEFAULT 1,
+
+        FOREIGN KEY (type_id) REFERENCES types(type_id)
     )`
 );
 
@@ -72,7 +96,7 @@ db.run(`
         device_id INTEGER NOT NULL,
 
         FOREIGN KEY (part_id) REFERENCES parts(part_id),
-        FOREIGN KEY (device_id) REFERENCES devices(device_id)
+        FOREIGN KEY (device_id) REFERENCES devices(device_id),
 
         UNIQUE(device_id, part_id)
     )`

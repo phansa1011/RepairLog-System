@@ -8,12 +8,9 @@ import StatusBadge from "../components/shared/StatusBadge";
 import { getAllDevice, createDevice, updateDevice, deleteDevice, restoreDevice } from "../api/deviceApi";
 import { getAllPart } from "../api/partApi";
 import { getAllDevicePart, createdevices, deletedevices, updatedevices } from "../api/devicePartApi";
+import { getAllCategories, createCategory, updateCategory } from "../api/categoryApi";
 
-const empty = { device_name: "", device_brand: "", device_category: "", is_active: 1 };
-
-const deviceCategories = [
-  "อื่นๆ"
-];
+const empty = { device_name: "", device_brand: "", category_id: "", is_active: 1 };
 
 export default function Devices() {
   const [devices, setDevices] = useState([]);
@@ -25,7 +22,6 @@ export default function Devices() {
   const [parts, setParts] = useState([]);
   const [addPartModal, setAddPartModal] = useState(false);
   const [addPartForm, setAddPartForm] = useState({ part_id: "" });
-  const [extraParts, setExtraParts] = useState({}); // deviceId -> [{part_name, part_type}]
   const [editPartId, setEditPartId] = useState(null);
   const [search, setSearch] = useState("");
   const [error, setError] = useState("");
@@ -34,6 +30,14 @@ export default function Devices() {
   const [confirmType, setConfirmType] = useState("");
   const [selectedRow, setSelectedRow] = useState(null);
   const [selectedPart, setSelectedPart] = useState(null);
+
+  const [categoryModal, setCategoryModal] = useState(false);
+  const [categoryFormModal, setCategoryFormModal] = useState(false);
+  const [categories, setCategories] = useState([]);
+
+  const [categoryForm, setCategoryForm] = useState({ name: "" });
+  const [editCategoryId, setEditCategoryId] = useState(null);
+  const [categoryError, setCategoryError] = useState("");
 
   const load = async () => {
     try {
@@ -48,7 +52,20 @@ export default function Devices() {
       console.error("Load devices error:", err);
     }
   };
-  useEffect(() => { load(); }, []);
+
+  const loadCategories = async () => {
+    try {
+      const data = await getAllCategories();
+      setCategories(data);
+    } catch (err) {
+      console.error("Load categories error:", err);
+    }
+  };
+
+  useEffect(() => {
+    load();
+    loadCategories();
+  }, []);
 
   useEffect(() => {
     if (expandedId) {
@@ -93,7 +110,7 @@ export default function Devices() {
         setError("ชื่อแบรนด์ห้ามมีอักขระพิเศษ");
         return;
       }
-      if (!form.device_category) {
+      if (!form.category_id) {
         setError("กรุณาเลือกประเภทอุปกรณ์");
         return;
       }
@@ -116,13 +133,13 @@ export default function Devices() {
         await updateDevice(editId, {
           device_name: name,
           device_brand: brand,
-          device_category: form.device_category
+          category_id: form.category_id
         });
       } else {
         await createDevice({
           device_name: name,
           device_brand: brand,
-          device_category: form.device_category
+          category_id: form.category_id
         });
       }
       setModal(false);
@@ -165,7 +182,7 @@ export default function Devices() {
 
   const openAddPart = (e) => {
     e.stopPropagation();
-    setAddPartForm({ part_name: "", part_type: "other" });
+    setAddPartForm({ part_id: "" });
     setAddPartModal(true);
   };
 
@@ -224,10 +241,69 @@ export default function Devices() {
     }
   };
 
+  const openAddCategory = () => {
+    setCategoryForm({ name: "" });
+    setEditCategoryId(null);
+    setCategoryError("");
+    setCategoryFormModal(true);
+  };
+
+  const openEditCategory = (cat) => {
+    setCategoryForm({ name: cat.category_name });
+    setEditCategoryId(cat.category_id);
+    setCategoryError("");
+    setCategoryFormModal(true);
+  };
+
+  const saveCategory = async () => {
+
+    const name = categoryForm.name.trim();
+
+    if (!name) {
+      setCategoryError("กรุณากรอกชื่อประเภท");
+      return;
+    }
+
+    const regex = /^[A-Za-zก-๙0-9\s]+$/;
+
+    if (!regex.test(name)) {
+      setCategoryError("ชื่อประเภทห้ามมีอักขระพิเศษ");
+      return;
+    }
+
+    try {
+
+      if (editCategoryId) {
+        await updateCategory(editCategoryId, {
+          category_name: name
+        });
+      } else {
+        await createCategory({
+          category_name: name
+        });
+      }
+
+      setCategoryFormModal(false);
+      setCategoryError("");
+      loadCategories();
+
+    } catch (err) {
+
+      const msg = err.message || "";
+
+      if (msg.includes("UNIQUE") || msg.includes("already exists")) {
+        setCategoryError("มีประเภทนี้อยู่แล้ว");
+      } else {
+        setCategoryError("เกิดข้อผิดพลาด");
+      }
+
+    }
+  };
+
   const filteredDevices = devices.filter(d =>
     d.device_name?.toLowerCase().includes(search.toLowerCase()) ||
     d.device_brand?.toLowerCase().includes(search.toLowerCase()) ||
-    d.device_category?.toLowerCase().includes(search.toLowerCase())
+    d.category_name?.toLowerCase().includes(search.toLowerCase())
   );
 
   const f = (k) => (e) => setForm(p => ({ ...p, [k]: e.target.value }));
@@ -249,9 +325,9 @@ export default function Devices() {
     },
     { key: "device_brand", label: "แบรนด์" },
     {
-      key: "device_category",
+      key: "category_name",
       label: "ประเภท",
-      render: v => <StatusBadge value={v} />
+      render: v => <span className="text-gray-700">{v}</span>
     },
 
     {
@@ -317,13 +393,22 @@ export default function Devices() {
       <PageHeader
         title="อุปกรณ์"
         action={
-          <button
-            onClick={openAdd}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm text-gray-800 shadow-sm hover:shadow-md transition-all"
-            style={{ background: "#F5E87C" }}
-          >
-            <Plus className="w-4 h-4" /> เพิ่มอุปกรณ์
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setCategoryModal(true)}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm bg-white text-gray-700 border hover:bg-gray-50"
+            >
+              ประเภท
+            </button>
+
+            <button
+              onClick={openAdd}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm text-gray-800 shadow-sm hover:shadow-md transition-all"
+              style={{ background: "#F5E87C" }}
+            >
+              <Plus className="w-4 h-4" /> เพิ่มอุปกรณ์
+            </button>
+          </div>
         }
       />
 
@@ -382,7 +467,7 @@ export default function Devices() {
                           {p.part_name}
                         </td>
                         <td className="py-2 px-3 text-gray-500">
-                          {p.part_type}
+                          {p.type_id}
                         </td>
                         <td className="py-2 px-3 text-right">
                           <div className="flex justify-end gap-2">
@@ -473,6 +558,100 @@ export default function Devices() {
         </div>
       </Modal>
 
+      <Modal
+        open={categoryModal}
+        onClose={() => setCategoryModal(false)}
+        title="ประเภทอุปกรณ์"
+      >
+        <div className="space-y-4">
+
+          <div className="flex justify-end">
+            <button
+              onClick={openAddCategory}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-gray-800 shadow-sm hover:shadow-md"
+              style={{ background: "#F5E87C" }}
+            >
+              <Plus className="w-3.5 h-3.5" />
+              เพิ่มประเภท
+            </button>
+          </div>
+
+          {categories.length === 0 ? (
+            <p className="text-sm text-gray-400 italic text-center py-4">
+              ยังไม่มีรายการประเภทอุปกรณ์
+            </p>
+          ) : (
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-xs text-gray-400 uppercase">
+                  <th className="text-left py-2">ชื่อประเภท</th>
+                  <th className="text-right py-2"></th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {categories.map(cat => (
+                  <tr key={cat.category_id} className="border-t">
+                    <td className="py-2 font-medium">{cat.category_name}</td>
+
+                    <td className="py-2 text-right">
+                      <button
+                        onClick={() => openEditCategory(cat)}
+                        className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </Modal>
+
+      <Modal
+        open={categoryFormModal}
+        onClose={() => setCategoryFormModal(false)}
+        title={editCategoryId ? "แก้ไขประเภท" : "เพิ่มประเภท"}
+      >
+        <div className="space-y-4">
+
+          {categoryError && (
+            <div className="p-2 text-sm text-red-600 bg-red-50 rounded-lg">
+              {categoryError}
+            </div>
+          )}
+
+          <FormField label="ชื่อประเภท" required>
+            <Input
+              value={categoryForm.name}
+              onChange={(e) =>
+                setCategoryForm({ name: e.target.value })
+              }
+              placeholder="เช่น Router"
+            />
+          </FormField>
+
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => setCategoryFormModal(false)}
+              className="px-4 py-2 rounded-xl text-sm text-gray-500 hover:bg-gray-100"
+            >
+              ยกเลิก
+            </button>
+
+            <button
+              onClick={saveCategory}
+              className="px-5 py-2 rounded-xl text-sm text-gray-800 hover:shadow-md"
+              style={{ background: "#F5E87C" }}
+            >
+              บันทึก
+            </button>
+          </div>
+        </div>
+      </Modal>
+
       <Modal open={modal} onClose={() => setModal(false)} title={editId ? "แก้ไขอุปกรณ์" : "เพิ่มอุปกรณ์"}>
         <div className="space-y-4">
           {error && (
@@ -505,13 +684,13 @@ export default function Devices() {
             </FormField>
             <FormField label="ประเภทอุปกรณ์" required>
               <Select
-                value={form.device_category}
-                onChange={f("device_category")}
+                value={form.category_id}
+                onChange={f("category_id")}
               >
                 <option value="">เลือกประเภท</option>
-                {deviceCategories.map(type => (
-                  <option key={type} value={type}>
-                    {type}
+                {categories.map(cat => (
+                  <option key={cat.category_id} value={cat.category_id}>
+                    {cat.category_name}
                   </option>
                 ))}
               </Select>
@@ -521,36 +700,6 @@ export default function Devices() {
             <button onClick={() => setModal(false)} className="px-4 py-2 rounded-xl text-sm text-gray-500 hover:bg-gray-100 transition-colors">ยกเลิก</button>
             <button onClick={handleSave} className="px-5 py-2 rounded-xl text-sm text-gray-800 transition-all hover:shadow-md" style={{ background: "#F5E87C" }}>
               {editId ? "บันทึกการแก้ไข" : "เพิ่มอุปกรณ์"}
-            </button>
-          </div>
-        </div>
-      </Modal>
-      <Modal
-        open={confirmModal}
-        onClose={() => setConfirmModal(false)}
-        title="ยืนยันการทำรายการ"
-      >
-        <div className="space-y-4">
-          <p className="text-sm text-gray-600">
-            {confirmType === "deleteDevice" &&
-              `ต้องการลบ "${selectedRow?.device_name}" ใช่หรือไม่?`}
-            {confirmType === "restoreDevice" &&
-              `ต้องการกู้คืน "${selectedRow?.device_name}" ใช่หรือไม่?`}
-            {confirmType === "deletePart" &&
-              `ต้องการลบ "${selectedPart?.partName}" ออกจากอุปกรณ์นี้หรือไม่?`}
-          </p>
-          <div className="flex justify-end gap-3">
-            <button
-              onClick={() => setConfirmModal(false)}
-              className="px-4 py-2 rounded-xl text-sm text-gray-500 hover:bg-gray-100"
-            >
-              ยกเลิก
-            </button>
-            <button
-              onClick={handleConfirm}
-              className="px-4 py-2 rounded-xl text-sm text-white bg-red-500 hover:bg-red-600"
-            >
-              ยืนยัน
             </button>
           </div>
         </div>

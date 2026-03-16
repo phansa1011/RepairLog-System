@@ -1,7 +1,19 @@
 const db = require('../db/db');
 
 exports.getAllPart = (req, res) => {
-    const sql = "SELECT * FROM parts ORDER BY create_at DESC";
+    const sql = `
+        SELECT 
+            p.part_id,
+            p.part_name,
+            p.type_id,
+            t.type_name,
+            p.create_at,
+            p.update_at,
+            p.is_active
+        FROM parts p
+        LEFT JOIN types t ON p.type_id = t.type_id
+        ORDER BY p.create_at DESC
+    `;
 
     db.all(sql, [], (err, rows) => {
         if (err) {
@@ -34,7 +46,7 @@ exports.getPartById = (req, res) => {
 };
 
 exports.createPart = (req, res) => {
-    const { part_name, part_type } = req.body;
+    const { part_name, type_id } = req.body;
 
     //validation
     if (!part_name || !part_name.trim()) {
@@ -42,15 +54,15 @@ exports.createPart = (req, res) => {
             message: "part_name is required"
         });
     }
-    if (!part_type || !part_type.trim()) {
+    if (!type_id) {
         return res.status(400).json({
             message: "มีอะไหล่นี้อยู่แล้ว"
         });
     }
 
-    const sql = "INSERT INTO parts (part_name, part_type) VALUES (?, ?)";
+    const sql = "INSERT INTO parts (part_name, type_id) VALUES (?, ?)";
 
-    db.run(sql, [part_name, part_type], function (err) {
+    db.run(sql, [part_name, type_id], function (err) {
         if (err) {
             if (err.message.includes("UNIQUE constraint failed")) {
                 return res.status(409).json({
@@ -65,14 +77,14 @@ exports.createPart = (req, res) => {
             message: "Part created",
             part_id: this.lastID,
             part_name: part_name,
-            part_type: part_type
+            type_id: type_id
         })
     })
 }
 
 exports.updatePart = (req, res) => {
     const { id } = req.params;
-    const { part_name, part_type } = req.body;
+    const { part_name, type_id } = req.body;
 
     //validation
     if (!part_name || !part_name.trim()) {
@@ -80,9 +92,9 @@ exports.updatePart = (req, res) => {
             message: "part_name is required"
         });
     }
-    if (!part_type || !part_type.trim()) {
+    if (!type_id) {
         return res.status(400).json({
-            message: "part_type is required"
+            message: "มีอะไหล่นี้อยู่แล้ว"
         });
     }
     //check record มีไหม
@@ -99,11 +111,11 @@ exports.updatePart = (req, res) => {
         //update
         const updateSql = `
             UPDATE parts
-            SET part_name = ?, part_type = ?, update_at = datetime('now', '+7 hours')
+            SET part_name = ?, type_id = ?, update_at = datetime('now', '+7 hours')
             WHERE part_id = ? AND is_active = 1
         `;
 
-        db.run(updateSql, [part_name, part_type, id], function (err) {
+        db.run(updateSql, [part_name, type_id, id], function (err) {
             if (err) {
                 //ถ้ามี UNIQUE constraint
                 if (err.message.includes("UNIQUE")) {

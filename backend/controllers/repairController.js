@@ -20,7 +20,8 @@ exports.getAllRepairs = (req, res) => {
         d.device_name,
 
         p.part_name,
-        p.part_type,
+
+        t.type_name,
 
         rw.repair_worker_id,
         rw.worker_id,
@@ -35,6 +36,9 @@ exports.getAllRepairs = (req, res) => {
 
     LEFT JOIN parts p
         ON r.part_id = p.part_id
+
+    LEFT JOIN types t
+        ON p.type_id = t.type_id
 
     LEFT JOIN repair_workers rw
         ON r.repair_id = rw.repair_id
@@ -73,7 +77,7 @@ exports.getAllRepairs = (req, res) => {
                     update_at: row.update_at,
                     device_name: row.device_name,
                     part_name: row.part_name,
-                    part_type: row.part_type,
+                    type_name: row.type_name,
                     workers: [] // เตรียม array สำหรับ worker
                 };
             }
@@ -123,7 +127,8 @@ exports.getRepairById = (req, res) => {
 
       p.part_id,
       p.part_name,
-      p.part_type,
+
+      t.type_name,
 
       rw.repair_worker_id,
 
@@ -141,6 +146,9 @@ exports.getRepairById = (req, res) => {
 
     LEFT JOIN parts p
       ON r.part_id = p.part_id
+    
+    LEFT JOIN types t
+        ON p.type_id = t.type_id
 
     LEFT JOIN repair_workers rw
       ON r.repair_id = rw.repair_id
@@ -187,7 +195,8 @@ exports.getRepairById = (req, res) => {
             part: {
                 part_id: rows[0].part_id,
                 part_name: rows[0].part_name,
-                part_type: rows[0].part_type
+                type_name: rows[0].type_name
+
             },
 
             workers: []

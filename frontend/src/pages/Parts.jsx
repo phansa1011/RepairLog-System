@@ -6,20 +6,11 @@ import Modal from "../components/shared/Modal";
 import FormField, { Input, Select } from "../components/shared/FormField";
 import ActionButtons from "../components/shared/ActionButtons";
 import StatusBadge from "../components/shared/StatusBadge";
-import {
-    getAllPart,
-    createPart,
-    updatePart,
-    deletePart,
-    restorePart
-} from "../api/partApi";
+import { getAllPart, createPart, updatePart, deletePart, restorePart } from "../api/partApi";
+import { getAllTypes, createType, updateType } from "../api/typeApi";
 
-const empty = { part_name: "", part_type: "", is_active: 1 };
+const empty = { part_name: "", type_id: "", is_active: 1 };
 
-const partTypes = [
-    "สายไฟ",
-    "อื่นๆ"
-];
 export default function Parts() {
     const [parts, setParts] = useState([]);
     const [modal, setModal] = useState(false);
@@ -32,6 +23,13 @@ export default function Parts() {
     const [confirmType, setConfirmType] = useState("");
     const [selectedPart, setSelectedPart] = useState(null);
 
+    const [typeModal, setTypeModal] = useState(false);
+    const [typeFormModal, setTypeFormModal] = useState(false);
+    const [types, setTypes] = useState([]);
+    const [typeForm, setTypeForm] = useState({ name: "" });
+    const [editTypeId, setEditTypeId] = useState(null);
+    const [typeError, setTypeError] = useState("");
+
     const load = async () => {
         try {
             const data = await getAllPart();
@@ -40,9 +38,18 @@ export default function Parts() {
             console.error("Load parts error:", err);
         }
     };
+    const loadTypes = async () => {
+        try {
+            const data = await getAllTypes();
+            setTypes(data);
+        } catch (err) {
+            console.error("Load types error:", err);
+        }
+    };
 
     useEffect(() => {
         load();
+        loadTypes();
     }, []);
 
     const openAdd = () => {
@@ -63,7 +70,7 @@ export default function Parts() {
         try {
             setError("");
             const name = form.part_name?.trim();
-            const type = form.part_type?.trim();
+            const type = form.type_id;
             const regex = /^[A-Za-zก-๙0-9\s]+$/;
             if (!name) {
                 setError("กรุณากรอกชื่ออะไหล่");
@@ -84,7 +91,6 @@ export default function Parts() {
             const duplicate = parts.find(
                 p =>
                     normalize(p.part_name) === normalize(name) &&
-                    normalize(p.part_type) === normalize(type) &&
                     p.part_id !== editId
             );
 
@@ -96,12 +102,12 @@ export default function Parts() {
             if (editId) {
                 await updatePart(editId, {
                     part_name: name,
-                    part_type: type
+                    type_id: type
                 });
             } else {
                 await createPart({
                     part_name: name,
-                    part_type: type
+                    type_id: type
                 });
             }
             setModal(false);
@@ -140,16 +146,75 @@ export default function Parts() {
         }
     };
 
+    const openAddType = () => {
+        setTypeForm({ name: "" });
+        setEditTypeId(null);
+        setTypeError("");
+        setTypeFormModal(true);
+    };
+
+    const openEditType = (type) => {
+        setTypeForm({ name: type.name });
+        setEditTypeId(type.type_id);
+        setTypeError("");
+        setTypeFormModal(true);
+    };
+
+    const saveType = async () => {
+
+        const name = typeForm.name.trim();
+
+        if (!name) {
+            setTypeError("กรุณากรอกชื่อประเภท");
+            return;
+        }
+
+        const regex = /^[A-Za-zก-๙0-9\s]+$/;
+
+        if (!regex.test(name)) {
+            setTypeError("ชื่อประเภทห้ามมีอักขระพิเศษ");
+            return;
+        }
+
+        try {
+
+            if (editTypeId) {
+                await updateType(editTypeId, {
+                    type_name: name
+                });
+            } else {
+                await createType({
+                    type_name: name
+                });
+            }
+
+            setTypeFormModal(false);
+            setTypeError("");
+            loadTypes();
+
+        } catch (err) {
+
+            const msg = err.message || "";
+
+            if (msg.includes("UNIQUE") || msg.includes("already exists")) {
+                setTypeError("มีประเภทนี้อยู่แล้ว");
+            } else {
+                setTypeError("เกิดข้อผิดพลาด");
+            }
+
+        }
+    };
+
     const filteredParts = parts.filter(p =>
         p.part_name?.toLowerCase().includes(search.toLowerCase()) ||
-        p.part_type?.toLowerCase().includes(search.toLowerCase())
+        p.type_name?.toLowerCase().includes(search.toLowerCase())
     );
 
     const f = (k) => (e) => setForm(p => ({ ...p, [k]: e.target.value }));
 
     const columns = [
         { key: "part_name", label: "ชื่ออะไหล่", render: v => <span className="font-medium text-gray-800">{v}</span> },
-        { key: "part_type", label: "ประเภทอะไหล่" },
+        { key: "type_name", label: "ประเภทอะไหล่" },
         { key: "is_active", label: "สถานะ", render: v => <StatusBadge value={v === 1 ? "active" : "inactive"} /> },
         {
             key: "active",
@@ -178,13 +243,23 @@ export default function Parts() {
             <PageHeader
                 title="อะไหล่"
                 action={
-                    <button
-                        onClick={openAdd}
-                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm text-gray-800 shadow-sm hover:shadow-md transition-all"
-                        style={{ background: "#F5E87C" }}
-                    >
-                        <Plus className="w-4 h-4" /> เพิ่มอะไหล่
-                    </button>
+                    <div className="flex gap-2">
+
+                        <button
+                            onClick={() => setTypeModal(true)}
+                            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm bg-white text-gray-700 border hover:bg-gray-50"
+                        >
+                            ประเภท
+                        </button>
+
+                        <button
+                            onClick={openAdd}
+                            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm text-gray-800 shadow-sm hover:shadow-md transition-all"
+                            style={{ background: "#F5E87C" }}
+                        >
+                            <Plus className="w-4 h-4" /> เพิ่มอะไหล่
+                        </button>
+                    </div>
                 }
             />
             <div className="relative mb-4">
@@ -197,6 +272,105 @@ export default function Parts() {
                 />
             </div>
             <DataTable columns={columns} data={filteredParts} emptyMessage="ไม่พบข้อมูลอะไหล่" />
+
+            <Modal
+                open={typeModal}
+                onClose={() => setTypeModal(false)}
+                title="ประเภทอะไหล่"
+            >
+                <div className="space-y-4">
+
+                    <div className="flex justify-end">
+                        <button
+                            onClick={openAddType}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-gray-800 shadow-sm hover:shadow-md"
+                            style={{ background: "#F5E87C" }}
+                        >
+                            <Plus className="w-3.5 h-3.5" />
+                            เพิ่มประเภท
+                        </button>
+                    </div>
+
+                    {types.length === 0 ? (
+                        <p className="text-sm text-gray-400 italic text-center py-4">
+                            ยังไม่มีรายการประเภทอะไหล่
+                        </p>
+                    ) : (
+                        <table className="w-full text-sm">
+                            <thead>
+                                <tr className="text-xs text-gray-400 uppercase">
+                                    <th className="text-left py-2">ชื่อประเภท</th>
+                                    <th className="text-right py-2"></th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                {types.map(type => (
+                                    <tr key={type.type_id} className="border-t">
+
+                                        <td className="py-2 font-medium">
+                                            {type.type_name}
+                                        </td>
+
+                                        <td className="py-2 text-right">
+                                            <button
+                                                onClick={() => openEditType(type)}
+                                                className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100"
+                                            >
+                                                <Plus className="w-3.5 h-3.5" />
+                                            </button>
+                                        </td>
+
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    )}  
+                </div>
+            </Modal>
+
+            <Modal
+                open={typeFormModal}
+                onClose={() => setTypeFormModal(false)}
+                title={editTypeId ? "แก้ไขประเภท" : "เพิ่มประเภท"}
+            >
+                <div className="space-y-4">
+
+                    {typeError && (
+                        <div className="p-2 text-sm text-red-600 bg-red-50 rounded-lg">
+                            {typeError}
+                        </div>
+                    )}
+
+                    <FormField label="ชื่อประเภท" required>
+                        <Input
+                            value={typeForm.name}
+                            onChange={(e) =>
+                                setTypeForm({ name: e.target.value })
+                            }
+                            placeholder="เช่น สายไฟ"
+                        />
+                    </FormField>
+
+                    <div className="flex justify-end gap-3">
+                        <button
+                            onClick={() => setTypeFormModal(false)}
+                            className="px-4 py-2 rounded-xl text-sm text-gray-500 hover:bg-gray-100"
+                        >
+                            ยกเลิก
+                        </button>
+
+                        <button
+                            onClick={saveType}
+                            className="px-5 py-2 rounded-xl text-sm text-gray-800 hover:shadow-md"
+                            style={{ background: "#F5E87C" }}
+                        >
+                            บันทึก
+                        </button>
+                    </div>
+
+                </div>
+            </Modal>
 
             <Modal open={modal} onClose={() => setModal(false)} title={editId ? "แก้ไขอะไหล่" : "เพิ่มอะไหล่"}>
                 <div className="space-y-4">
@@ -219,13 +393,13 @@ export default function Parts() {
                         </FormField>
                         <FormField label="ประเภทอะไหร่" required>
                             <Select
-                                value={form.part_type}
-                                onChange={f("part_type")}
+                                value={form.type_id}
+                                onChange={f("type_id")}
                             >
                                 <option value="">เลือกประเภท</option>
-                                {partTypes.map(type => (
-                                    <option key={type} value={type}>
-                                        {type}
+                                {types.map(type => (
+                                    <option key={type.type_id} value={type.type_id}>
+                                        {type.type_name}
                                     </option>
                                 ))}
                             </Select>

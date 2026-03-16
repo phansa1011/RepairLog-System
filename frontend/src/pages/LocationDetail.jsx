@@ -54,7 +54,7 @@ export default function LocationDetail() {
     }, [id]);
 
     const partTypeCounts = repairs.reduce((acc, r) => {
-        const type = r.part_type || "ไม่ระบุ";
+        const type = r.type_name || "ไม่ระบุ";
         acc[type] = (acc[type] || 0) + 1;
         return acc;
     }, {});
@@ -120,7 +120,7 @@ export default function LocationDetail() {
                                         <td className="px-5 py-4 text-gray-400">{r.repair_date || "—"}</td>
                                         <td className="px-5 py-4 font-medium text-gray-800">{r.device_name || "—"}</td>
                                         <td className="px-5 py-4 text-gray-500">{r.part_name || "—"}</td>
-                                        <td className="px-5 py-4 text-gray-500">{r.part_type || "—"}</td>
+                                        <td className="px-5 py-4 text-gray-500">{r.type_name || "—"}</td>
                                         <td className="px-5 py-4 text-gray-500">
                                             {r.workers?.map(w => w.name).join(", ") || "—"}
                                         </td>

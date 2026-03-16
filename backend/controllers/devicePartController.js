@@ -7,14 +7,15 @@ exports.getAllDevicePart = (req, res) => {
             dp.device_id,
             dp.part_id,
             p.part_name,
-            p.part_type
+            p.type_id
         FROM device_parts dp
         LEFT JOIN parts p ON dp.part_id = p.part_id
-        WHERE p.is_active = 1
+        AND p.is_active = 1
     `;
 
     db.all(sql, [], (err, rows) => {
         if (err) {
+            console.log("DEVICE_PART ERROR:", err.message);
             return res.status(500).json({
                 message: "Database error",
                 error: err.message
@@ -29,6 +30,7 @@ exports.getDevicePartById = (req, res) => {
 
     db.get(sql, [req.params.id], (err, rows) => {
         if (err) {
+            console.log("DEVICE_PART ERROR:", err.message);
             return res.status(500).json({
                 message: "Database error",
                 error: err.message
@@ -179,7 +181,7 @@ exports.addPartsToDevice = (req, res) => {
 };
 
 exports.updateDevicePart = (req, res) => {
-    
+
     const { id } = req.params;          // device_part_id
     const { part_id } = req.body;
 
@@ -198,6 +200,7 @@ exports.updateDevicePart = (req, res) => {
     db.run(sql, [part_id, id], function (err) {
 
         if (err) {
+            console.log("DEVICE_PART ERROR:", err.message);
             return res.status(500).json({
                 message: "Database error",
                 error: err.message
@@ -241,6 +244,7 @@ exports.deleteDevicePart = (req, res) => {
 
         // 5️⃣ ถ้า database error
         if (err) {
+            console.log("DEVICE_PART ERROR:", err.message);
             return res.status(500).json({
                 message: "Database error",
                 error: err.message

@@ -9,6 +9,8 @@ const app = express();
 const authRoutes = require('./routes/authRoutes');
 const workerRoutes = require('./routes/workerRoutes');
 const locationRoutes = require('./routes/locationRoutes');
+const categoryRoutes = require('./routes/categoryRoutes');
+const typeRoutes = require('./routes/typeRoutes');
 const deviceRoutes = require('./routes/deviceRoutes');
 const partRoutes = require('./routes/partRoutes');
 const devicePartRoutes = require('./routes/devicePartRoutes');
@@ -26,6 +28,8 @@ app.get('/', (req, res) => {
 app.use('/api', authRoutes);
 app.use('/api/workers', workerRoutes);
 app.use('/api/locations', locationRoutes);
+app.use('/api/categories', categoryRoutes);
+app.use('/api/types', typeRoutes);
 app.use('/api/devices', deviceRoutes);
 app.use('/api/parts', partRoutes);
 app.use('/api/device_parts', devicePartRoutes)

@@ -1,7 +1,20 @@
 const db = require('../db/db');
 
 exports.getAllDevice = (req, res) => {
-    const sql = "SELECT * FROM devices ORDER BY create_at DESC";
+    const sql = `
+    SELECT 
+        d.device_id,
+        d.device_name,
+        d.device_brand,
+        d.category_id,
+        c.category_name,
+        d.is_active,
+        d.create_at,
+        d.update_at
+    FROM devices d
+    LEFT JOIN categories c 
+        ON d.category_id = c.category_id
+    ORDER BY d.create_at DESC`;
 
     db.all(sql, [], (err, rows) => {
         if (err) {
@@ -15,7 +28,18 @@ exports.getAllDevice = (req, res) => {
 };
 
 exports.getDeviceById = (req, res) => {
-    const sql = "SELECT * FROM devices WHERE device_id = ? AND is_active = 1";
+    const sql = `
+    SELECT 
+        d.device_id,
+        d.device_name,
+        d.device_brand,
+        d.category_id,
+        c.category_name,
+        d.is_active
+    FROM devices d
+    LEFT JOIN categories c 
+        ON d.category_id = c.category_id
+    WHERE d.device_id = ? AND d.is_active = 1`;
 
     db.get(sql, [req.params.id], (err, rows) => {
         if (err) {
@@ -34,7 +58,7 @@ exports.getDeviceById = (req, res) => {
 };
 
 exports.createDevice = (req, res) => {
-    const { device_name, device_brand, device_category } = req.body;
+    const { device_name, device_brand, category_id } = req.body;
 
     //validation
     if (!device_name || !device_name.trim()) {
@@ -44,11 +68,11 @@ exports.createDevice = (req, res) => {
     }
 
     const sql = `
-        INSERT INTO devices (device_name, device_brand, device_category, is_active)
+        INSERT INTO devices (device_name, device_brand, category_id, is_active)
         VALUES (?, ?, ?, 1)
         `;
 
-    db.run(sql, [device_name, device_brand, device_category], function (err) {
+    db.run(sql, [device_name, device_brand, category_id], function (err) {
         if (err) {
             if (err.message.includes("UNIQUE constraint failed")) {
                 return res.status(409).json({
@@ -69,7 +93,7 @@ exports.createDevice = (req, res) => {
 
 exports.updateDevice = (req, res) => {
     const { id } = req.params;
-    const { device_name, device_brand, device_category } = req.body;
+    const { device_name, device_brand, category_id } = req.body;
 
     //validation
     if (!device_name || !device_name.trim()) {
@@ -78,9 +102,9 @@ exports.updateDevice = (req, res) => {
         });
     }
 
-    if (!device_category) {
+    if (!category_id) {
         return res.status(400).json({
-            message: "device_category is required"
+            message: "category_id is required"
         });
     }
 
@@ -100,12 +124,12 @@ exports.updateDevice = (req, res) => {
             UPDATE devices
             SET device_name = ?, 
                 device_brand = ?, 
-                device_category = ?, 
+                category_id = ?, 
                 update_at = datetime('now', '+7 hours')
             WHERE device_id = ? AND is_active = 1
         `;
 
-        db.run(updateSql, [device_name, device_brand, device_category, id], function (err) {
+        db.run(updateSql, [device_name, device_brand, category_id, id], function (err) {
             if (err) {
                 //ถ้ามี UNIQUE constraint
                 if (err.message.includes("UNIQUE")) {
