@@ -195,7 +195,7 @@ export default function Repairs() {
 
     const handleRowClick = (repair_id) => setExpandedId(prev => prev === repair_id ? null : repair_id);
 
-    const headers = ["วันที่สร้าง", "สถานที่", "อุปกรณ์", "อะไหล่", "วันที่ซ่อม", ""];
+    const headers = ["วันที่สร้าง", "สถานที่", "อุปกรณ์", "อะไหล่", "ประเภทอะไหล่", "วันที่ซ่อม", ""];
 
     const columns = [
         {
@@ -228,6 +228,11 @@ export default function Repairs() {
             label: "อะไหล่",
             render: (_, row) =>
                 parts.find(p => p.part_id === row.part_id)?.part_name || "—"
+        },
+        {
+            key: "part_type",
+            label: "ประเภทอะไหล่",
+            render: (_, row) => row.type_name || "—"
         },
         {
             key: "repair_date",

@@ -250,7 +250,10 @@ export default function Locations() {
                         </button>
                         <button
                             onClick={handleConfirm}
-                            className="px-4 py-2 rounded-xl text-sm text-white bg-red-500 hover:bg-red-600"
+                            className={`px-4 py-2 rounded-xl text-sm text-white ${confirmType === "delete"
+                                    ? "bg-red-500 hover:bg-red-600"
+                                    : "bg-green-500 hover:bg-green-600"
+                                }`}
                         >
                             ยืนยัน
                         </button>

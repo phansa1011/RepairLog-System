@@ -27,36 +27,6 @@ exports.getAllDevice = (req, res) => {
     });
 };
 
-exports.getDeviceById = (req, res) => {
-    const sql = `
-    SELECT 
-        d.device_id,
-        d.device_name,
-        d.device_brand,
-        d.category_id,
-        c.category_name,
-        d.is_active
-    FROM devices d
-    LEFT JOIN categories c 
-        ON d.category_id = c.category_id
-    WHERE d.device_id = ? AND d.is_active = 1`;
-
-    db.get(sql, [req.params.id], (err, rows) => {
-        if (err) {
-            return res.status(500).json({
-                message: "Database error",
-                error: err.message
-            });
-        }
-        if (!rows) {
-            return res.status(404).json({
-                message: "Device not found"
-            });
-        } else
-            res.status(200).json(rows);
-    });
-};
-
 exports.createDevice = (req, res) => {
     const { device_name, device_brand, category_id } = req.body;
 

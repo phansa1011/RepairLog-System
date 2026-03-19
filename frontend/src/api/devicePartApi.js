@@ -4,10 +4,6 @@ export const getAllDevicePart = () => {
   return apiFetch("/device_parts");
 };
 
-export const getdevicesById = (id) => {
-  return apiFetch(`/device_parts/${id}`);
-};
-
 export const createdevices = (data) => {
   return apiFetch("/device_parts", {
     method: "POST",

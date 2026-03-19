@@ -14,25 +14,6 @@ exports.getAllWorks = (req, res) => {
     });
 };
 
-exports.getWorkerById = (req, res) => {
-    const sql = "SELECT * FROM workers WHERE worker_id = ? AND is_active = 1";
-
-    db.get(sql, [req.params.id], (err, rows) => {
-        if (err) {
-            return res.status(500).json({
-                message: "Database error",
-                error: err.message
-            });
-        }
-        if (!rows) {
-            return res.status(404).json({
-                message: "Worker not found"
-            });
-        } else
-            res.status(200).json(rows);
-    });
-};
-
 exports.createWorker = (req, res) => {
     const { staff_id, name, lastname } = req.body;
 

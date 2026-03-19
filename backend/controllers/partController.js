@@ -26,25 +26,6 @@ exports.getAllPart = (req, res) => {
     });
 };
 
-exports.getPartById = (req, res) => {
-    const sql = "SELECT * FROM parts WHERE part_id = ? AND is_active = 1";
-
-    db.get(sql, [req.params.id], (err, rows) => {
-        if (err) {
-            return res.status(500).json({
-                message: "Database error",
-                error: err.message
-            });
-        }
-        if (!rows) {
-            return res.status(404).json({
-                message: "Part not found"
-            });
-        } else
-            res.status(200).json(rows);
-    });
-};
-
 exports.createPart = (req, res) => {
     const { part_name, type_id } = req.body;
 

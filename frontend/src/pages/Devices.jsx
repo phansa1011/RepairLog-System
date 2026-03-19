@@ -92,7 +92,7 @@ export default function Devices() {
       const name = form.device_name?.trim();
       const brand = form.device_brand?.trim();
 
-      const regex = /^[A-Za-zก-๙0-9\s]+$/;
+      const regex = /^[A-Za-zก-๙0-9\s\-_.\/()+&]+$/;
 
       if (!name) {
         setError("กรุณากรอกชื่ออุปกรณ์");
@@ -467,7 +467,7 @@ export default function Devices() {
                           {p.part_name}
                         </td>
                         <td className="py-2 px-3 text-gray-500">
-                          {p.type_id}
+                          {p.type_name}
                         </td>
                         <td className="py-2 px-3 text-right">
                           <div className="flex justify-end gap-2">
@@ -502,7 +502,11 @@ export default function Devices() {
         }}
       />
 
-      <Modal open={addPartModal} onClose={() => setAddPartModal(false)} title="เพิ่มอะไหล่">
+      <Modal
+        open={addPartModal}
+        onClose={() => setAddPartModal(false)}
+        title={editPartId ? "แก้ไขอะไหล่" : "เพิ่มอะไหล่"}
+      >
         <div className="space-y-4">
           <FormField label="อะไหล่" required>
             <Select
@@ -521,8 +525,11 @@ export default function Devices() {
           </FormField>
           <div className="flex justify-end gap-3 pt-2">
             <button onClick={() => setAddPartModal(false)} className="px-4 py-2 rounded-xl text-sm text-gray-500 hover:bg-gray-100 transition-colors">ยกเลิก</button>
-            <button onClick={handleSaveAddPart} className="px-5 py-2 rounded-xl text-sm text-gray-800 transition-all hover:shadow-md" style={{ background: "#F5E87C" }}>
-              บันทึก
+            <button onClick={handleSaveAddPart}
+              className="px-5 py-2 rounded-xl text-sm text-gray-800 transition-all hover:shadow-md"
+              style={{ background: "#F5E87C" }}
+            >
+              {editPartId ? "บันทึกการแก้ไข" : "บันทึก"}
             </button>
           </div>
         </div>
@@ -550,7 +557,10 @@ export default function Devices() {
             </button>
             <button
               onClick={handleConfirm}
-              className="px-4 py-2 rounded-xl text-sm text-white bg-red-500 hover:bg-red-600"
+              className={`px-4 py-2 rounded-xl text-sm text-white ${confirmType === "delete"
+                  ? "bg-red-500 hover:bg-red-600"
+                  : "bg-green-500 hover:bg-green-600"
+                }`}
             >
               ยืนยัน
             </button>

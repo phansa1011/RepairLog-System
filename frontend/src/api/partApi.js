@@ -4,10 +4,6 @@ export const getAllPart = () => {
   return apiFetch("/parts");
 };
 
-export const getPartById = (id) => {
-  return apiFetch(`/parts/${id}`);
-};
-
 export const createPart = (data) => {
   return apiFetch("/parts", {
     method: "POST",

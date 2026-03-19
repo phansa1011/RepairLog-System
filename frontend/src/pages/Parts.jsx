@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Search, RotateCcw } from "lucide-react";
+import { Plus, Pencil, Search, RotateCcw } from "lucide-react";
 import PageHeader from "../components/shared/PageHeader";
 import DataTable from "../components/shared/DataTable";
 import Modal from "../components/shared/Modal";
@@ -71,7 +71,7 @@ export default function Parts() {
             setError("");
             const name = form.part_name?.trim();
             const type = form.type_id;
-            const regex = /^[A-Za-zก-๙0-9\s]+$/;
+            const regex = /^[A-Za-zก-๙0-9\s\-_.\/()+&]+$/;
             if (!name) {
                 setError("กรุณากรอกชื่ออะไหล่");
                 return;
@@ -317,7 +317,7 @@ export default function Parts() {
                                                 onClick={() => openEditType(type)}
                                                 className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100"
                                             >
-                                                <Plus className="w-3.5 h-3.5" />
+                                                <Pencil className="w-3.5 h-3.5" />
                                             </button>
                                         </td>
 
@@ -325,7 +325,7 @@ export default function Parts() {
                                 ))}
                             </tbody>
                         </table>
-                    )}  
+                    )}
                 </div>
             </Modal>
 
@@ -436,7 +436,10 @@ export default function Parts() {
                         </button>
                         <button
                             onClick={handleConfirm}
-                            className="px-4 py-2 rounded-xl text-sm text-white bg-red-500 hover:bg-red-600"
+                            className={`px-4 py-2 rounded-xl text-sm text-white ${confirmType === "delete"
+                                    ? "bg-red-500 hover:bg-red-600"
+                                    : "bg-green-500 hover:bg-green-600"
+                                }`}
                         >
                             ยืนยัน
                         </button>

@@ -5,11 +5,6 @@ export const getAllWorkers = () => {
   return apiFetch("/workers");
 };
 
-// GET /api/workers/:id
-export const getWorkerById = (id) => {
-  return apiFetch(`/workers/${id}`);
-};
-
 // POST /api/workers
 export const createWorker = (data) => {
   return apiFetch("/workers", {

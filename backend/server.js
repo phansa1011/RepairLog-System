@@ -25,7 +25,7 @@ app.get('/', (req, res) => {
     res.send('Server is running');
 });
 
-app.use('/api', authRoutes);
+app.use('/api/auth', authRoutes);
 app.use('/api/workers', workerRoutes);
 app.use('/api/locations', locationRoutes);
 app.use('/api/categories', categoryRoutes);

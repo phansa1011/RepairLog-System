@@ -7,7 +7,6 @@ const auth = require('../middleware/auth');
 router.use(auth);
 
 router.get('/', deviceController.getAllDevice);
-router.get('/:id', deviceController.getDeviceById);
 router.post('/', deviceController.createDevice);
 router.put('/:id', deviceController.updateDevice);
 router.delete('/:id', deviceController.deleteDevice);
